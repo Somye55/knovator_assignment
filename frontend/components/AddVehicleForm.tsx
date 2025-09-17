@@ -35,7 +35,7 @@ export default function AddVehicleForm({ onVehicleAdded }: AddVehicleFormProps) 
       setFormData((prev: CreateVehicleData) => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof CreateVehicleData],
+          ...(prev[parent as keyof CreateVehicleData] as Record<string, unknown>),
           [child]: value,
         },
       }));
@@ -50,9 +50,9 @@ export default function AddVehicleForm({ onVehicleAdded }: AddVehicleFormProps) 
   const handleFeatureToggle = (feature: typeof FEATURES[number]) => {
     setFormData((prev: CreateVehicleData) => ({
       ...prev,
-      features: prev.features.includes(feature)
-        ? prev.features.filter((f: typeof FEATURES[number]) => f !== feature)
-        : [...prev.features, feature],
+      features: (prev.features || []).includes(feature)
+        ? (prev.features || []).filter((f: string) => f !== feature)
+        : [...(prev.features || []), feature],
     }));
   };
 
@@ -85,7 +85,7 @@ export default function AddVehicleForm({ onVehicleAdded }: AddVehicleFormProps) 
       } else {
         setError(response.error || 'Failed to add vehicle');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -223,7 +223,7 @@ export default function AddVehicleForm({ onVehicleAdded }: AddVehicleFormProps) 
               <label key={feature} className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={formData.features.includes(feature)}
+                  checked={(formData.features || []).includes(feature)}
                   onChange={() => handleFeatureToggle(feature)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />

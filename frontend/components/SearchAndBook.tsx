@@ -46,7 +46,7 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
         setError(response.error || 'Failed to search vehicles');
         setVehicles([]);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
       setVehicles([]);
     } finally {
@@ -89,7 +89,7 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
       } else {
         setBookingError(response.error || 'Failed to create booking');
       }
-    } catch (err) {
+    } catch {
       setBookingError('An unexpected error occurred');
     } finally {
       setBookingLoading(null);

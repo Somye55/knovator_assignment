@@ -1,5 +1,5 @@
-import SearchAndBook from '@/components/SearchAndBook';
+import HomePageComponent from '@/components/HomePage';
 
 export default function HomePage() {
-  return <SearchAndBook />;
+  return <HomePageComponent />;
 }
