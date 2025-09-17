@@ -29,6 +29,12 @@ const vehicleSchema = new Schema<IVehicleDocument>({
     required: [true, 'Price per hour is required'],
     min: [0, 'Price cannot be negative']
   },
+  tyres: {
+    type: Number,
+    required: [true, 'Number of tyres is required'],
+    min: [1, 'Vehicle must have at least 1 tyre'],
+    max: [6, 'Vehicle cannot have more than 6 tyres']
+  },
   location: {
     pincode: {
       type: String,

@@ -1,7 +1,7 @@
 // Simple validation middleware without express-validator
 export const vehicleValidation = [
     (req: any, res: any, next: any) => {
-        const { name, type, capacity, pricePerHour, location } = req.body;
+        const { name, type, capacity, pricePerHour, tyres, location } = req.body;
         
         const errors = [];
         
@@ -19,6 +19,10 @@ export const vehicleValidation = [
         
         if (!pricePerHour || pricePerHour < 0) {
             errors.push('Price per hour must be a positive number');
+        }
+
+        if (!tyres || tyres < 1 || tyres > 6) {
+            errors.push('Number of tyres must be between 1 and 6');
         }
         
         if (!location?.pincode || !/^\d{6}$/.test(location.pincode)) {

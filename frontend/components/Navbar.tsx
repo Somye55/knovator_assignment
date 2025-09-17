@@ -48,7 +48,16 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">Vehicle Rental Platform</span>
+            <Link
+              href="/my-bookings"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                pathname === '/my-bookings'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+              }`}
+            >
+              My Bookings
+            </Link>
           </div>
         </div>
       </div>

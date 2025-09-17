@@ -53,6 +53,7 @@ export interface CreateVehicleData {
   type: string;
   capacity: number;
   pricePerHour: number;
+  tyres: number;
   location: {
     pincode: string;
     city: string;

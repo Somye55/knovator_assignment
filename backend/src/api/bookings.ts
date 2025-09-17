@@ -18,4 +18,6 @@ router.get('/my-bookings', bookingController.getMyBookings);
 
 router.put('/:id/cancel', bookingController.cancelBooking);
 
+router.delete('/:id', bookingController.deleteBooking);
+
 export default router;

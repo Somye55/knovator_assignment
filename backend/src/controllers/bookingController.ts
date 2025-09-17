@@ -70,9 +70,9 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             return;
         }
 
-        // Calculate total price
+        // Calculate total price based on actual duration (not rounded up)
         const durationMs = new Date(bookingData.endTime).getTime() - new Date(bookingData.startTime).getTime();
-        const totalHours = Math.ceil(durationMs / (1000 * 60 * 60));
+        const totalHours = durationMs / (1000 * 60 * 60); // Actual hours as decimal
         const totalPrice = totalHours * vehicleDoc.pricePerHour;
 
         // Create booking
@@ -252,6 +252,58 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
         const response: IApiResponse = {
             success: true,
             data: booking
+        };
+        res.json(response);
+    } catch (error) {
+        const response: IApiResponse = {
+            success: false,
+            error: (error as Error).message
+        };
+        res.status(500).json(response);
+    }
+};
+
+// @desc    Delete a booking
+// @route   DELETE /api/bookings/:id
+// @access  Private
+export const deleteBooking = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const booking = await Booking.findById(req.params.id);
+
+        if (!booking) {
+            const response: IApiResponse = {
+                success: false,
+                error: 'Booking not found'
+            };
+            res.status(404).json(response);
+            return;
+        }
+
+        // Check if user owns the booking
+        if (booking.user.toString() !== req.user!.id) {
+            const response: IApiResponse = {
+                success: false,
+                error: 'Not authorized to delete this booking'
+            };
+            res.status(401).json(response);
+            return;
+        }
+
+        // Make vehicle available again if booking was active
+        if (['pending', 'confirmed'].includes(booking.status)) {
+            const vehicle = await Vehicle.findById(booking.vehicle);
+            if (vehicle) {
+                vehicle.isAvailable = true;
+                await vehicle.save();
+            }
+        }
+
+        // Delete the booking
+        await Booking.findByIdAndDelete(req.params.id);
+
+        const response: IApiResponse = {
+            success: true,
+            message: 'Booking deleted successfully'
         };
         res.json(response);
     } catch (error) {

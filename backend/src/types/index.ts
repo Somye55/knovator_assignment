@@ -6,6 +6,7 @@ export interface IVehicle {
   type: 'Hatchback' | 'Sedan' | 'SUV' | 'MUV' | 'Luxury';
   capacity: number;
   pricePerHour: number;
+  tyres: number;
   location: {
     pincode: string;
     city: string;
@@ -68,6 +69,7 @@ export interface CreateVehicleRequest {
   type: 'Hatchback' | 'Sedan' | 'SUV' | 'MUV' | 'Luxury';
   capacity: number;
   pricePerHour: number;
+  tyres: number;
   location: ILocation;
   features?: string[];
   images?: string[];

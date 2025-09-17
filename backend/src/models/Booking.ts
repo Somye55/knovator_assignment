@@ -110,7 +110,7 @@ bookingSchema.virtual('isActive').get(function () {
 bookingSchema.pre('save', function (next) {
     if (this.startTime && this.endTime) {
         const durationMs = this.endTime.getTime() - this.startTime.getTime();
-        this.totalHours = Math.ceil(durationMs / (1000 * 60 * 60));
+        this.totalHours = durationMs / (1000 * 60 * 60); // Actual hours as decimal
     }
     next();
 });
