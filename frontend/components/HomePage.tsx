@@ -13,12 +13,12 @@ export default function HomePage() {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto items-stretch">
           <Link
             href="/search-book"
-            className="group block bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="group block bg-white rounded-xl shadow-lg p-8 h-full hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
-            <div className="text-center">
+            <div className="text-center flex flex-col h-full justify-between">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
                 <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -34,16 +34,16 @@ export default function HomePage() {
           
           <Link
             href="/add-vehicle"
-            className="group block bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="group block bg-white rounded-xl shadow-lg p-8 h-full hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
-            <div className="text-center">
+            <div className="text-center flex flex-col h-full justify-between">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
                 <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">Add Vehicle</h2>
-              <p className="text-gray-600 mb-4">List your vehicle for rent and earn money</p>
+              <p className="text-gray-600 mb-4">List your vehicle for rent and earn money from rentals</p>
               <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium">
                 Add Vehicle
               </button>
