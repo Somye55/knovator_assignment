@@ -47,8 +47,15 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         // Calculate estimated ride duration based on pincodes
         const fromPin = parseInt(fromPincode);
         const toPin = parseInt(toPincode);
-        const estimatedRideDurationHours = Math.abs(fromPin - toPin) % 24;
-
+        const rawDiff = Math.abs(fromPin - toPin);
+        // Apply modulo 24 but treat differences that are exact multiples of 24 as 24 hours
+        let estimatedRideDurationHours = rawDiff % 24;
+        if (estimatedRideDurationHours === 0 && rawDiff !== 0) {
+            estimatedRideDurationHours = 24;
+        }
+        // Enforce minimum duration to match Booking schema (0.5 hours)
+        estimatedRideDurationHours = Math.max(estimatedRideDurationHours, 0.5);
+ 
         // Calculate bookingEndTime = startTime + estimatedRideDurationHours
         const startTimeDate = new Date(startTime);
         const bookingEndTime = new Date(startTimeDate.getTime() + estimatedRideDurationHours * 60 * 60 * 1000);

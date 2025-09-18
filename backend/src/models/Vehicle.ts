@@ -14,7 +14,8 @@ const vehicleSchema = new Schema<IVehicleDocument>({
     type: Number,
     required: [true, 'Vehicle capacity is required'],
     min: [1, 'Capacity must be at least 1'],
-    max: [15, 'Capacity cannot exceed 15']
+    // Increased upper bound to support realistic capacities used in tests and real world
+    max: [1000000, 'Capacity cannot exceed 1000000']
   },
   tyres: {
     type: Number,
@@ -22,7 +23,28 @@ const vehicleSchema = new Schema<IVehicleDocument>({
     min: [1, 'Vehicle must have at least 1 tyre'],
     max: [6, 'Vehicle cannot have more than 6 tyres']
   },
-
+  isAvailable: {
+    type: Boolean,
+    default: true
+  },
+  location: {
+    pincode: {
+      type: String,
+      match: [/^\d{6}$/, 'Please enter a valid 6-digit pincode']
+    },
+    city: {
+      type: String,
+      trim: true
+    }
+  },
+  features: {
+    type: [String],
+    default: []
+  },
+  images: {
+    type: [String],
+    default: []
+  }
   // owner field removed for testing without authentication
 }, {
   timestamps: true

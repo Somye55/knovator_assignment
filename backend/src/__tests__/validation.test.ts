@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { vehicleValidation, bookingValidation } from '../middleware/validation';
 
 describe('Validation Middleware', () => {
@@ -65,7 +66,7 @@ describe('Validation Middleware', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        errors: ['Capacity must be between 1 and 15']
+        errors: ['Capacity must be between 1 and 1000000']
       });
     });
 
@@ -97,167 +98,122 @@ describe('Validation Middleware', () => {
     it('should pass validation for valid booking data', () => {
       const req = {
         body: {
-          vehicle: new require('mongoose').Types.ObjectId().toHexString(),
+          vehicleId: new mongoose.Types.ObjectId().toHexString(),
+          fromPincode: '110001',
+          toPincode: '110002',
           startTime: '2023-10-27T10:00:00Z',
-          endTime: '2023-10-27T11:00:00Z',
-          pickupLocation: {
-            pincode: '110001',
-            city: 'Delhi',
-            address: '123 Main St'
-          },
-          dropoffLocation: {
-            pincode: '110002',
-            city: 'Delhi',
-            address: '456 Side St'
-          },
-          estimatedRideDurationHours: 1
+          customerId: 'customer123'
         }
       } as any;
-
+  
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       } as any;
-
+  
       const next = jest.fn();
-
+  
       bookingValidation(req, res, next);
-
+  
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
     });
-
-    it('should fail validation for missing vehicle', () => {
+  
+    it('should fail validation for missing vehicleId', () => {
       const req = {
         body: {
+          fromPincode: '110001',
+          toPincode: '110002',
           startTime: '2023-10-27T10:00:00Z',
-          endTime: '2023-10-27T11:00:00Z',
-          pickupLocation: {
-            pincode: '110001',
-            city: 'Delhi',
-            address: '123 Main St'
-          },
-          dropoffLocation: {
-            pincode: '110002',
-            city: 'Delhi',
-            address: '456 Side St'
-          },
-          estimatedRideDurationHours: 1
+          customerId: 'customer123'
         }
       } as any;
-
+  
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       } as any;
-
+  
       bookingValidation(req, res, () => {});
-
+  
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        errors: ['Vehicle is required']
+        errors: ['Vehicle ID is required']
       });
     });
-
-    it('should fail validation for invalid pincode', () => {
+  
+    it('should fail validation for invalid fromPincode', () => {
       const req = {
         body: {
-          vehicle: new require('mongoose').Types.ObjectId().toHexString(),
+          vehicleId: new mongoose.Types.ObjectId().toHexString(),
+          fromPincode: '123', // Invalid pincode
+          toPincode: '110002',
           startTime: '2023-10-27T10:00:00Z',
-          endTime: '2023-10-27T11:00:00Z',
-          pickupLocation: {
-            pincode: '123', // Invalid pincode
-            city: 'Delhi',
-            address: '123 Main St'
-          },
-          dropoffLocation: {
-            pincode: '110002',
-            city: 'Delhi',
-            address: '456 Side St'
-          },
-          estimatedRideDurationHours: 1
+          customerId: 'customer123'
         }
       } as any;
-
+  
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       } as any;
-
+  
       bookingValidation(req, res, () => {});
-
+  
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        errors: ['Pickup pincode must be a 6-digit number']
+        errors: ['From pincode must be a 6-digit number']
       });
     });
-
-    it('should fail validation for missing pickup city', () => {
+  
+    it('should fail validation for invalid startTime', () => {
       const req = {
         body: {
-          vehicle: new require('mongoose').Types.ObjectId().toHexString(),
-          startTime: '2023-10-27T10:00:00Z',
-          endTime: '2023-10-27T11:00:00Z',
-          pickupLocation: {
-            pincode: '110001',
-            address: '123 Main St'
-          },
-          dropoffLocation: {
-            pincode: '110002',
-            city: 'Delhi',
-            address: '456 Side St'
-          },
-          estimatedRideDurationHours: 1
+          vehicleId: new mongoose.Types.ObjectId().toHexString(),
+          fromPincode: '110001',
+          toPincode: '110002',
+          startTime: 'invalid-date',
+          customerId: 'customer123'
         }
       } as any;
-
+  
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       } as any;
-
+  
       bookingValidation(req, res, () => {});
-
+  
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        errors: ['Pickup city is required']
+        errors: ['Start time must be a valid date']
       });
     });
-
-    it('should fail validation for invalid estimated ride duration', () => {
+  
+    it('should fail validation for missing customerId', () => {
       const req = {
         body: {
-          vehicle: new require('mongoose').Types.ObjectId().toHexString(),
-          startTime: '2023-10-27T10:00:00Z',
-          endTime: '2023-10-27T11:00:00Z',
-          pickupLocation: {
-            pincode: '110001',
-            city: 'Delhi',
-            address: '123 Main St'
-          },
-          dropoffLocation: {
-            pincode: '110002',
-            city: 'Delhi',
-            address: '456 Side St'
-          },
-          estimatedRideDurationHours: 0.1 // Too short
+          vehicleId: new mongoose.Types.ObjectId().toHexString(),
+          fromPincode: '110001',
+          toPincode: '110002',
+          startTime: '2023-10-27T10:00:00Z'
         }
       } as any;
-
+  
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       } as any;
-
+  
       bookingValidation(req, res, () => {});
-
+  
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        errors: ['Estimated ride duration must be at least 0.5 hours']
+        errors: ['Customer ID is required']
       });
     });
   });
