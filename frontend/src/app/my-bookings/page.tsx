@@ -158,8 +158,8 @@ export default function MyBookingsPage() {
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-1">{booking.vehicle.name}</h3>
-                        <p className="text-gray-600">{booking.vehicle.type} • {booking.vehicle.capacityKg} KG • {booking.vehicle.tyres} tyres</p>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-1">{booking.vehicle?.name ?? 'Vehicle'}</h3>
+                        <p className="text-gray-600">{booking.vehicle?.type ?? 'N/A'} • {booking.vehicle?.capacityKg ?? 'N/A'} KG • {booking.vehicle?.tyres ?? 'N/A'} tyres</p>
                         <div className="flex items-center space-x-2 mt-2">
                           {getStatusBadge(booking.status)}
                           <span className="text-sm text-gray-500">•</span>
@@ -202,9 +202,9 @@ export default function MyBookingsPage() {
                         </div>
                         <h4 className="font-medium text-gray-900">Pickup</h4>
                       </div>
-                      <p className="text-gray-900 font-medium mb-1">{booking.pickupLocation.address}</p>
+                      <p className="text-gray-900 font-medium mb-1">{booking.pickupLocation?.address ?? 'N/A'}</p>
                       <p className="text-sm text-gray-600 mb-2">
-                        {booking.pickupLocation.city}
+                        {booking.pickupLocation?.city ?? 'N/A'}
                       </p>
                       <p className="text-sm font-medium text-blue-600">{formatDate(booking.startTime)}</p>
                     </div>
@@ -219,9 +219,9 @@ export default function MyBookingsPage() {
                         </div>
                         <h4 className="font-medium text-gray-900">Dropoff</h4>
                       </div>
-                      <p className="text-gray-900 font-medium mb-1">{booking.dropoffLocation.address}</p>
+                      <p className="text-gray-900 font-medium mb-1">{booking.dropoffLocation?.address ?? 'N/A'}</p>
                       <p className="text-sm text-gray-600 mb-2">
-                        {booking.dropoffLocation.city}
+                        {booking.dropoffLocation?.city ?? 'N/A'}
                       </p>
                       <p className="text-sm font-medium text-blue-600">{formatDate(booking.endTime)}</p>
                     </div>
@@ -229,7 +229,7 @@ export default function MyBookingsPage() {
 
                   <div className="text-center pt-4 border-t border-gray-200">
                     <div className="text-sm text-gray-500 mb-1">Total Ride Duration</div>
-                    <div className="text-lg font-semibold text-blue-600">{booking.estimatedRideDurationHours} hours</div>
+                    <div className="text-lg font-semibold text-blue-600">{booking.estimatedRideDurationHours ?? 'N/A'} hours</div>
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-gray-200 text-center">

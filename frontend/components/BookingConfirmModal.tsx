@@ -64,8 +64,8 @@ export default function BookingConfirmModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">{vehicle.name}</h3>
-                <p className="text-sm text-gray-600">{vehicle.type ?? "Vehicle"}</p>
+                <h3 className="font-semibold text-gray-900">{vehicle?.name ?? 'Vehicle'}</h3>
+                <p className="text-sm text-gray-600">{vehicle?.type ?? "Vehicle"}</p>
               </div>
             </div>
           </div>

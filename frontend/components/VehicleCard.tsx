@@ -23,13 +23,13 @@ export default function VehicleCard({
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <div className="p-6">
         <div className="mb-4">
-          <h3 className="text-xl font-semibold text-gray-900">{vehicle.name}</h3>
+          <h3 className="text-xl font-semibold text-gray-900">{vehicle.name ?? 'Vehicle'}</h3>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div>
             <div className="text-xs text-gray-500">Capacity (KG)</div>
-            <div className="text-sm text-gray-900">{vehicle.capacity}</div>
+            <div className="text-sm text-gray-900">{vehicle.capacity ?? 'N/A'}</div>
           </div>
           <div>
             <div className="text-xs text-gray-500">Tyres</div>

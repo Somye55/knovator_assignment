@@ -598,7 +598,7 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
               {vehicles.map((vehicle) => (
                 <VehicleCard
                   key={vehicle._id}
-                  vehicle={vehicle}
+                  vehicle={vehicle || { name: 'Unknown Vehicle', capacity: 0, tyres: 0, isAvailable: false }}
                   estimatedRideDurationHours={
                     vehicle.estimatedRideDurationHours ?? 0
                   }
@@ -615,9 +615,9 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                   setSelectedVehicle(null);
                   setModalError(null);
                 }}
-                vehicle={selectedVehicle}
-                fromLocation={fromLocation}
-                toLocation={toLocation}
+                vehicle={selectedVehicle || null}
+                fromLocation={fromLocation || null}
+                toLocation={toLocation || null}
                 startTimeIso={
                   searchParams.startTime
                     ? new Date(searchParams.startTime).toISOString()
