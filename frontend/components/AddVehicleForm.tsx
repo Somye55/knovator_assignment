@@ -14,24 +14,34 @@ export default function AddVehicleForm({
   const [formData, setFormData] = useState<CreateVehicleData>({
     name: "",
     capacity: 0,
-    tyres: 2,
+    tyres: 0, // Changed from 2 to 0 to show placeholder
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isFormComplete, setIsFormComplete] = useState(false);
 
+  // support both input and select change events
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev: CreateVehicleData) => ({
       ...prev,
       [name]:
         name === "capacity" || name === "tyres"
-          ? Number(value)
+          ? value === "" ? 0 : Number(value)
           : value,
     }));
+    checkFormCompletion();
+  };
+
+  const checkFormCompletion = () => {
+    const isComplete = formData.name.trim() !== "" &&
+                      formData.capacity > 0 &&
+                      formData.tyres > 0;
+    setIsFormComplete(isComplete);
   };
 
 
@@ -58,10 +68,11 @@ export default function AddVehicleForm({
 
       if (response.success && response.data) {
         setSuccess(true);
+        // Reset form to initial empty/default values
         setFormData({
           name: "",
-          capacity: 500,
-          tyres: 4,
+          capacity: 0,
+          tyres: 0,
         });
 
         if (onVehicleAdded) {
@@ -125,11 +136,12 @@ export default function AddVehicleForm({
               type="number"
               id="capacity"
               name="capacity"
-              value={formData.capacity}
+              value={formData.capacity || ''}
               onChange={handleInputChange}
               required
               min="20"
               max="3000"
+              placeholder="e.g., 500"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -141,17 +153,21 @@ export default function AddVehicleForm({
             >
               Number of Tyres *
             </label>
-            <input
-              type="number"
+            <select
               id="tyres"
               name="tyres"
-              value={formData.tyres}
+              value={formData.tyres || ''}
               onChange={handleInputChange}
               required
-              min="2"
-              max="6"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+              className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${formData.tyres === 0 ? 'text-gray-400' : 'text-gray-900'}`}
+            >
+              <option value="">Select number of tyres</option>
+              <option value={2}>2 tyres</option>
+              <option value={3}>3 tyres</option>
+              <option value={4}>4 tyres</option>
+              <option value={5}>5 tyres</option>
+              <option value={6}>6 tyres</option>
+            </select>
           </div>
         </div>
 
@@ -161,8 +177,8 @@ export default function AddVehicleForm({
             onClick={() => {
               setFormData({
                 name: "",
-                capacity: 500,
-                tyres: 4,
+                capacity: 0,
+                tyres: 0,
               });
               setError(null);
               setSuccess(false);
@@ -174,7 +190,7 @@ export default function AddVehicleForm({
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isFormComplete}
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Adding..." : "Add Vehicle"}

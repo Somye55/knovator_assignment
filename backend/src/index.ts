@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import connectDB from './utils/database';
 import vehiclesRouter from './api/vehicles';
 import bookingsRouter from './api/bookings';
+import healthRouter from './api/health';
 
 // Load environment variables
 dotenv.config();
@@ -19,6 +20,7 @@ app.use(cors());
 app.use(express.json());
 
 // API Routes
+app.use('/api/health', healthRouter);
 app.use('/api/vehicles', vehiclesRouter);
 app.use('/api/bookings', bookingsRouter);
 

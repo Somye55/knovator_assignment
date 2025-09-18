@@ -70,6 +70,11 @@ export const bookingValidation = (req: any, res: any, next: any) => {
         }
     }
     
+    // Check if from and to locations are the same
+    if (from && to && from.lat === to.lat && from.lon === to.lon) {
+        errors.push('From and to locations cannot be the same');
+    }
+    
     if (!startTime || Number.isNaN(Date.parse(startTime))) {
         errors.push('Start time must be a valid date');
     }

@@ -77,6 +77,7 @@ interface ApiResponse<T> {
   data?: T;
   error?: string;
   message?: string;
+  errors?: string[];
 }
 
 async function apiRequest<T>(

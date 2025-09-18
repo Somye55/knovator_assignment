@@ -1,3 +1,8 @@
+ /* Fonts are loaded via next/font in layout.tsx for optimization. */
+/* If you need to load manually, uncomment the import below:
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,600;1,9..40,600&family=Figtree:ital,wght@0,300..900;1,300..900&family=Quicksand:wght@300..700&display=swap');
+*/
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -80,7 +85,7 @@ body {
   max-width: 100vw;
   overflow-x: hidden;
   min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'DM Sans', 'Figtree', 'Quicksand', system-ui, -apple-system, sans-serif;
 }
 
 /* Maintain layout during page transitions */

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import styles from './LocationAutocomplete.module.css';
 
 interface NominatimLocation {
@@ -59,12 +59,6 @@ export default function LocationAutocomplete({ onLocationSelect, placeholder }: 
     }
   };
 
-  // Use useCallback to memoize the debounced function
-  const debouncedFetch = useCallback(debounce(fetchSuggestions, 500), []);
-
-  useEffect(() => {
-    debouncedFetch(query);
-  }, [query, debouncedFetch]);
 
   const handleSelect = (location: NominatimLocation) => {
     setQuery(location.display_name);
@@ -76,12 +70,23 @@ export default function LocationAutocomplete({ onLocationSelect, placeholder }: 
     });
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    // Only show suggestions if the user is typing (not after selection)
+    if (value.length >= 3) {
+      fetchSuggestions(value);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <input
         type="text"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={handleInputChange}
         placeholder={placeholder || 'Enter a location...'}
         className={styles.input}
       />
