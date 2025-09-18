@@ -109,17 +109,19 @@ export default function MyBookingsPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
             <p className="text-gray-600">Manage your vehicle rental bookings</p>
           </div>
-          <Link
-            href="/search-book"
-            className="mt-4 sm:mt-0 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md hover:shadow-lg"
-          >
-            <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span>Book Another Vehicle</span>
-            </div>
-          </Link>
+          {bookings.length > 0 && (
+            <Link
+              href="/search-book"
+              className="mt-4 sm:mt-0 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md hover:shadow-lg"
+            >
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Book Another Vehicle</span>
+              </div>
+            </Link>
+          )}
         </div>
 
         {bookings.length === 0 ? (

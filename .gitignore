@@ -12,7 +12,8 @@ out/
 
 # Production
 build/
-
+dist/
+*/dist
 # Misc
 .DS_Store
 *.pem
@@ -45,3 +46,7 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+
+#docs
+*.md

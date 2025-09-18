@@ -9,10 +9,10 @@ import healthRouter from './api/health';
 // Load environment variables
 dotenv.config();
 
+const app = express();
+
 // Connect to database
 connectDB();
-
-const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware

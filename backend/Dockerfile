@@ -13,6 +13,9 @@ RUN npm ci --omit=dev --production
 # Copy source code
 COPY . .
 
+# Build the TypeScript project
+RUN npm run build
+
 # Expose port
 EXPOSE 5000
 
