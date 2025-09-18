@@ -4,6 +4,17 @@ import Vehicle from '../models/Vehicle';
 import expressValidator from 'express-validator';
 import { IApiResponse, CreateBookingRequest, AvailableVehiclesQuery } from '../types';
 
+// Extend Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+      };
+    }
+  }
+}
+
 // @desc    Create a new booking
 // @route   POST /api/bookings
 // @access  Private

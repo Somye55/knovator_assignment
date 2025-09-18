@@ -3,6 +3,8 @@ import Vehicle from '../models/Vehicle';
 import expressValidator from 'express-validator';
 import { IApiResponse, CreateVehicleRequest } from '../types';
 
+// Request augmentation is provided by src/types/express.d.ts
+
 // @desc    Create a new vehicle
 // @route   POST /api/vehicles
 // @access  Private

@@ -2,6 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './utils/database';
+import vehiclesRouter from './api/vehicles';
+import bookingsRouter from './api/bookings';
+
+// Load environment variables
+dotenv.config();
 
 // Connect to database
 connectDB();
@@ -14,8 +19,8 @@ app.use(cors());
 app.use(express.json());
 
 // API Routes
-app.use('/api/vehicles', require('./api/vehicles'));
-app.use('/api/bookings', require('./api/bookings'));
+app.use('/api/vehicles', vehiclesRouter);
+app.use('/api/bookings', bookingsRouter);
 
 // Basic route for testing
 app.get('/', (req, res) => {
