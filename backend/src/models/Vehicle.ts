@@ -10,24 +10,11 @@ const vehicleSchema = new Schema<IVehicleDocument>({
     trim: true,
     maxlength: [100, 'Vehicle name cannot exceed 100 characters']
   },
-  type: {
-    type: String,
-    required: [true, 'Vehicle type is required'],
-    enum: {
-      values: ['Hatchback', 'Sedan', 'SUV', 'MUV', 'Luxury'],
-      message: 'Invalid vehicle type'
-    }
-  },
-  capacity: {
+  capacityKg: {
     type: Number,
     required: [true, 'Vehicle capacity is required'],
     min: [1, 'Capacity must be at least 1'],
     max: [15, 'Capacity cannot exceed 15']
-  },
-  pricePerHour: {
-    type: Number,
-    required: [true, 'Price per hour is required'],
-    min: [0, 'Price cannot be negative']
   },
   tyres: {
     type: Number,
@@ -35,35 +22,8 @@ const vehicleSchema = new Schema<IVehicleDocument>({
     min: [1, 'Vehicle must have at least 1 tyre'],
     max: [6, 'Vehicle cannot have more than 6 tyres']
   },
-  location: {
-    pincode: {
-      type: String,
-      required: [true, 'Pincode is required'],
-      match: [/^\d{6}$/, 'Please enter a valid 6-digit pincode']
-    },
-    city: {
-      type: String,
-      required: [true, 'City is required'],
-      trim: true
-    }
-  },
-  features: [{
-    type: String,
-    enum: ['AC', 'GPS', 'Music System', 'Bluetooth', 'USB Charging', 'Child Seat']
-  }],
-  images: [{
-    type: String,
-    default: []
-  }],
-  isAvailable: {
-    type: Boolean,
-    default: true
-  },
-  owner: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  }
+
+  // owner field removed for testing without authentication
 }, {
   timestamps: true
 });

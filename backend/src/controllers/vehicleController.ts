@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Vehicle from '../models/Vehicle';
+import Booking from '../models/Booking';
 import expressValidator from 'express-validator';
 import { IApiResponse, CreateVehicleRequest } from '../types';
 
@@ -11,26 +13,27 @@ import { IApiResponse, CreateVehicleRequest } from '../types';
 export const createVehicle = async (req: Request, res: Response): Promise<void> => {
     try {
         const errors = (req as any).validationErrors || [];
-        if (!errors.isEmpty()) {
+        if (errors.length > 0) {
             const response: IApiResponse = {
                 success: false,
-                errors: errors.array()
+                errors: errors
             };
             res.status(400).json(response);
             return;
         }
 
         const vehicleData: CreateVehicleRequest = {
-            ...req.body,
-            owner: req.user!.id
+            name: req.body.name,
+            capacityKg: req.body.capacityKg,
+            tyres: req.body.tyres
         };
 
         const vehicle = new Vehicle(vehicleData);
-        await vehicle.save();
-
+        const savedVehicle = await vehicle.save();
+ 
         const response: IApiResponse = {
             success: true,
-            data: vehicle
+            data: savedVehicle || vehicle
         };
         res.status(201).json(response);
     } catch (error) {
@@ -42,137 +45,71 @@ export const createVehicle = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-// @desc    Get all vehicles
-// @route   GET /api/vehicles
+// @desc    Get available vehicles
+// @route   GET /api/vehicles/available
 // @access  Public
-export const getAllVehicles = async (req: Request, res: Response): Promise<void> => {
+export const getAvailableVehicles = async (req: Request, res: Response): Promise<void> => {
     try {
-        const vehicles = await Vehicle.find().populate('owner', 'name email');
-        
-        const response: IApiResponse = {
-            success: true,
-            count: vehicles.length,
-            data: vehicles
-        };
-        res.json(response);
-    } catch (error) {
-        const response: IApiResponse = {
-            success: false,
-            error: (error as Error).message
-        };
-        res.status(500).json(response);
-    }
-};
+        const { capacityRequired, fromPincode, toPincode, startTime } = req.query;
 
-// @desc    Get single vehicle
-// @route   GET /api/vehicles/:id
-// @access  Public
-export const getVehicle = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const vehicle = await Vehicle.findById(req.params.id).populate('owner', 'name email');
-
-        if (!vehicle) {
+        // Validate required parameters
+        if (!capacityRequired || !fromPincode || !toPincode || !startTime) {
             const response: IApiResponse = {
                 success: false,
-                error: 'Vehicle not found'
+                error: 'Missing required parameters: capacityRequired, fromPincode, toPincode, startTime'
             };
-            res.status(404).json(response);
+            res.status(400).json(response);
             return;
         }
 
-        const response: IApiResponse = {
-            success: true,
-            data: vehicle
-        };
-        res.json(response);
-    } catch (error) {
-        const response: IApiResponse = {
-            success: false,
-            error: (error as Error).message
-        };
-        res.status(500).json(response);
-    }
-};
+        // Calculate estimated ride duration based on pincodes
+        const fromPin = parseInt(fromPincode as string);
+        const toPin = parseInt(toPincode as string);
+        const estimatedRideDurationHours = Math.abs(fromPin - toPin) % 24;
 
-// @desc    Update vehicle
-// @route   PUT /api/vehicles/:id
-// @access  Private
-export const updateVehicle = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const vehicle = await Vehicle.findById(req.params.id);
+        // Calculate endTime = startTime + estimatedRideDurationHours
+        const startTimeDate = new Date(startTime as string);
+        const endTime = new Date(startTimeDate.getTime() + estimatedRideDurationHours * 60 * 60 * 1000);
 
-        if (!vehicle) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Vehicle not found'
-            };
-            res.status(404).json(response);
-            return;
+        // Build query
+        let mongoQuery: any = { isAvailable: true };
+
+        // Add capacity filter
+        mongoQuery.capacityKg = { $gte: parseInt(capacityRequired as string) };
+
+        // Find vehicles that match basic criteria
+        const vehicles = await Vehicle.find(mongoQuery);
+
+        // Filter out vehicles with overlapping bookings
+        const availableVehicles = [];
+        for (const vehicle of vehicles) {
+            const overlappingBooking = await Booking.findOne({
+                vehicle: vehicle._id,
+                $or: [
+                    {
+                        startTime: { $lte: endTime },
+                        endTime: { $gte: startTimeDate }
+                    }
+                ],
+                status: { $in: ['pending', 'confirmed', 'in_progress'] }
+            });
+
+            if (!overlappingBooking) {
+                // Add estimated ride duration to vehicle object for response
+                const vehicleWithDuration = {
+                    ...vehicle.toObject(),
+                    estimatedRideDurationHours
+                };
+                availableVehicles.push(vehicleWithDuration);
+            }
         }
-
-        // Check if user owns the vehicle
-        if (vehicle.owner.toString() !== req.user!.id) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Not authorized to update this vehicle'
-            };
-            res.status(401).json(response);
-            return;
-        }
-
-        const updatedVehicle = await Vehicle.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true, runValidators: true }
-        );
 
         const response: IApiResponse = {
             success: true,
-            data: updatedVehicle
+            count: availableVehicles.length,
+            data: availableVehicles
         };
-        res.json(response);
-    } catch (error) {
-        const response: IApiResponse = {
-            success: false,
-            error: (error as Error).message
-        };
-        res.status(500).json(response);
-    }
-};
-
-// @desc    Delete vehicle
-// @route   DELETE /api/vehicles/:id
-// @access  Private
-export const deleteVehicle = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const vehicle = await Vehicle.findById(req.params.id);
-
-        if (!vehicle) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Vehicle not found'
-            };
-            res.status(404).json(response);
-            return;
-        }
-
-        // Check if user owns the vehicle
-        if (vehicle.owner.toString() !== req.user!.id) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Not authorized to delete this vehicle'
-            };
-            res.status(401).json(response);
-            return;
-        }
-
-        await vehicle.deleteOne();
-
-        const response: IApiResponse = {
-            success: true,
-            message: 'Vehicle deleted successfully'
-        };
-        res.json(response);
+        res.status(200).json(response);
     } catch (error) {
         const response: IApiResponse = {
             success: false,

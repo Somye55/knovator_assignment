@@ -13,7 +13,7 @@ export default function VehicleCard({
   onBookNow, 
   isBooking = false 
 }: VehicleCardProps) {
-  const totalPrice = vehicle.pricePerHour * estimatedRideDurationHours;
+  const totalPrice = (vehicle.pricePerHour || 0) * estimatedRideDurationHours;
 
   const getFeatureIcon = (feature: string) => {
     switch (feature) {
@@ -33,10 +33,10 @@ export default function VehicleCard({
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="text-xl font-semibold text-gray-900">{vehicle.name}</h3>
-            <p className="text-gray-600">{vehicle.type}</p>
+            <p className="text-gray-600">{vehicle.type || 'Vehicle Type'}</p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-blue-600">₹{vehicle.pricePerHour}<span className="text-sm font-normal text-gray-500">/hr</span></p>
+            <p className="text-2xl font-bold text-blue-600">₹{vehicle.pricePerHour || 'N/A'}<span className="text-sm font-normal text-gray-500">/hr</span></p>
             <p className="text-sm text-gray-500">Total: ₹{totalPrice}</p>
           </div>
         </div>
@@ -48,7 +48,7 @@ export default function VehicleCard({
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-gray-500">📍</span>
-            <span className="text-sm text-gray-700">{vehicle.location.city}, {vehicle.location.pincode}</span>
+            <span className="text-sm text-gray-700">{vehicle.location?.city || 'N/A'}, {vehicle.location?.pincode || 'N/A'}</span>
           </div>
         </div>
 

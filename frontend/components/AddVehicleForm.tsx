@@ -7,30 +7,14 @@ interface AddVehicleFormProps {
   onVehicleAdded?: () => void;
 }
 
-const VEHICLE_TYPES = ["Hatchback", "Sedan", "SUV", "MUV", "Luxury"] as const;
-const FEATURES = [
-  "AC",
-  "GPS",
-  "Music System",
-  "Bluetooth",
-  "USB Charging",
-  "Child Seat",
-] as const;
 
 export default function AddVehicleForm({
   onVehicleAdded,
 }: AddVehicleFormProps) {
   const [formData, setFormData] = useState<CreateVehicleData>({
     name: "",
-    type: "Hatchback",
     capacity: 4,
-    pricePerHour: 0,
     tyres: 4,
-    location: {
-      pincode: "",
-      city: "",
-    },
-    features: [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -38,41 +22,18 @@ export default function AddVehicleForm({
   const [success, setSuccess] = useState(false);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
-
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".");
-      setFormData((prev: CreateVehicleData) => ({
-        ...prev,
-        [parent]: {
-          ...(prev[parent as keyof CreateVehicleData] as Record<
-            string,
-            unknown
-          >),
-          [child]: value,
-        },
-      }));
-    } else {
-      setFormData((prev: CreateVehicleData) => ({
-        ...prev,
-        [name]:
-          name === "capacity" || name === "pricePerHour"
-            ? Number(value)
-            : value,
-      }));
-    }
-  };
-
-  const handleFeatureToggle = (feature: (typeof FEATURES)[number]) => {
     setFormData((prev: CreateVehicleData) => ({
       ...prev,
-      features: (prev.features || []).includes(feature)
-        ? (prev.features || []).filter((f: string) => f !== feature)
-        : [...(prev.features || []), feature],
+      [name]:
+        name === "capacity" || name === "tyres"
+          ? Number(value)
+          : value,
     }));
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,15 +48,8 @@ export default function AddVehicleForm({
         setSuccess(true);
         setFormData({
           name: "",
-          type: "Hatchback",
           capacity: 4,
-          pricePerHour: 0,
           tyres: 4,
-          location: {
-            pincode: "",
-            city: "",
-          },
-          features: [],
         });
 
         if (onVehicleAdded) {
@@ -147,36 +101,13 @@ export default function AddVehicleForm({
           />
         </div>
 
-        <div>
-          <label
-            htmlFor="type"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Vehicle Type *
-          </label>
-          <select
-            id="type"
-            name="type"
-            value={formData.type}
-            onChange={handleInputChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {VEHICLE_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
               htmlFor="capacity"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Capacity *
+              Capacity (KG) *
             </label>
             <input
               type="number"
@@ -191,28 +122,6 @@ export default function AddVehicleForm({
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="pricePerHour"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Price per Hour (₹) *
-            </label>
-            <input
-              type="number"
-              id="pricePerHour"
-              name="pricePerHour"
-              value={formData.pricePerHour}
-              onChange={handleInputChange}
-              required
-              min="0"
-              step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
               htmlFor="tyres"
@@ -234,81 +143,14 @@ export default function AddVehicleForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="location.pincode"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Pincode *
-            </label>
-            <input
-              type="text"
-              id="location.pincode"
-              name="location.pincode"
-              value={formData.location.pincode}
-              onChange={handleInputChange}
-              required
-              pattern="\d{6}"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="6-digit pincode"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="location.city"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              City *
-            </label>
-            <input
-              type="text"
-              id="location.city"
-              name="location.city"
-              value={formData.location.city}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., Delhi"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Features
-          </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {FEATURES.map((feature) => (
-              <label key={feature} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={(formData.features || []).includes(feature)}
-                  onChange={() => handleFeatureToggle(feature)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">{feature}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
         <div className="flex justify-end space-x-4">
           <button
             type="button"
             onClick={() => {
               setFormData({
                 name: "",
-                type: "Hatchback",
                 capacity: 4,
-                pricePerHour: 0,
                 tyres: 4,
-                location: {
-                  pincode: "",
-                  city: "",
-                },
-                features: [],
               });
               setError(null);
               setSuccess(false);

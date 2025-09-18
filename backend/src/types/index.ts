@@ -3,18 +3,17 @@ import mongoose from 'mongoose';
 // Vehicle Types
 export interface IVehicle {
   name: string;
-  type: 'Hatchback' | 'Sedan' | 'SUV' | 'MUV' | 'Luxury';
-  capacity: number;
-  pricePerHour: number;
+  type?: 'Hatchback' | 'Sedan' | 'SUV' | 'MUV' | 'Luxury';
+  capacityKg: number;
+  pricePerHour?: number;
   tyres: number;
-  location: {
-    pincode: string;
-    city: string;
+  location?: {
+    pincode?: string;
+    city?: string;
   };
   features: string[];
   images: string[];
   isAvailable: boolean;
-  owner: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,7 +21,6 @@ export interface IVehicle {
 // Booking Types
 export interface IBooking {
   vehicle: mongoose.Types.ObjectId;
-  user: mongoose.Types.ObjectId;
   startTime: Date;
   endTime: Date;
   totalHours: number;
@@ -40,6 +38,7 @@ export interface IBooking {
   status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   estimatedRideDurationHours: number;
+  customerId: string;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -66,28 +65,21 @@ export interface IApiResponse<T = any> {
 // Request/Response Types
 export interface CreateVehicleRequest {
   name: string;
-  type: 'Hatchback' | 'Sedan' | 'SUV' | 'MUV' | 'Luxury';
-  capacity: number;
-  pricePerHour: number;
+  capacityKg: number;
   tyres: number;
-  location: ILocation;
-  features?: string[];
-  images?: string[];
 }
 
 export interface CreateBookingRequest {
-  vehicle: string;
+  vehicleId: string;
+  fromPincode: string;
+  toPincode: string;
   startTime: string;
-  endTime: string;
-  pickupLocation: ILocation & { address: string };
-  dropoffLocation: ILocation & { address: string };
-  estimatedRideDurationHours: number;
+  customerId: string;
 }
 
 export interface AvailableVehiclesQuery {
-  capacity?: string;
-  pickupPincode?: string;
+  capacityRequired?: string;
+  fromPincode?: string;
+  toPincode?: string;
   startTime?: string;
-  endTime?: string;
-  estimatedRideDurationHours?: string;
 }

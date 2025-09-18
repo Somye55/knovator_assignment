@@ -3,12 +3,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 export interface Vehicle {
   _id: string;
   name: string;
-  type: string;
+  type?: string;
   capacity: number;
-  pricePerHour: number;
-  location: {
-    pincode: string;
-    city: string;
+  pricePerHour?: number;
+  location?: {
+    pincode?: string;
+    city?: string;
   };
   features: string[];
   images: string[];
@@ -50,16 +50,8 @@ export interface Booking {
 
 export interface CreateVehicleData {
   name: string;
-  type: string;
   capacity: number;
-  pricePerHour: number;
   tyres: number;
-  location: {
-    pincode: string;
-    city: string;
-  };
-  features?: string[];
-  images?: string[];
 }
 
 export interface CreateBookingData {
@@ -118,12 +110,11 @@ async function apiRequest<T>(
 
 // Vehicle API functions
 export async function getAvailableVehicles(params: {
-  capacity?: number;
-  pickupPincode?: string;
+  capacityRequired?: number;
+  fromPincode?: string;
+  toPincode?: string;
   startTime?: string;
-  endTime?: string;
-  estimatedRideDurationHours?: number;
-}): Promise<ApiResponse<{ data: Vehicle[]; count: number; estimatedRideDurationHours: number }>> {
+}): Promise<ApiResponse<{ data: Vehicle[]; count: number }>> {
   const queryParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined) {
@@ -131,7 +122,7 @@ export async function getAvailableVehicles(params: {
     }
   });
 
-  return apiRequest<{ data: Vehicle[]; count: number; estimatedRideDurationHours: number }>(
+  return apiRequest<{ data: Vehicle[]; count: number }>(
     `/api/vehicles/available?${queryParams.toString()}`
   );
 }

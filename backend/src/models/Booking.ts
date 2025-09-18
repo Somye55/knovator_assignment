@@ -9,11 +9,6 @@ const bookingSchema = new Schema<IBookingDocument>({
         ref: 'Vehicle',
         required: [true, 'Vehicle is required']
     },
-    user: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: [true, 'User is required']
-    },
     startTime: {
         type: Date,
         required: [true, 'Start time is required']
@@ -87,6 +82,10 @@ const bookingSchema = new Schema<IBookingDocument>({
         required: [true, 'Estimated ride duration is required'],
         min: [0.5, 'Estimated duration must be at least 0.5 hours']
     },
+    customerId: {
+        type: String,
+        required: [true, 'Customer ID is required']
+    },
     notes: {
         type: String,
         trim: true,
@@ -98,7 +97,6 @@ const bookingSchema = new Schema<IBookingDocument>({
 
 // Index for faster queries
 bookingSchema.index({ vehicle: 1, startTime: 1, endTime: 1 });
-bookingSchema.index({ user: 1, status: 1 });
 bookingSchema.index({ status: 1 });
 
 // Virtual for checking if booking is active

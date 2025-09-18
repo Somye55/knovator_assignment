@@ -5,8 +5,7 @@ import { vehicleValidation, handleValidationErrors } from '../middleware/validat
 const router = Router();
 
 // Public routes
-router.get('/', vehicleController.getAllVehicles);
-router.get('/:id', vehicleController.getVehicle);
+router.get('/available', vehicleController.getAvailableVehicles);
 
 // Protected routes (would need authentication middleware in production)
 router.post('/',
@@ -14,13 +13,5 @@ router.post('/',
     handleValidationErrors,
     vehicleController.createVehicle
 );
-
-router.put('/:id',
-    vehicleValidation,
-    handleValidationErrors,
-    vehicleController.updateVehicle
-);
-
-router.delete('/:id', vehicleController.deleteVehicle);
 
 export default router;

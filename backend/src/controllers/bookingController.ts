@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Booking from '../models/Booking';
 import Vehicle from '../models/Vehicle';
 import expressValidator from 'express-validator';
-import { IApiResponse, CreateBookingRequest, AvailableVehiclesQuery } from '../types';
+import { IApiResponse, CreateBookingRequest } from '../types';
 
 // Extend Express Request type
 declare global {
@@ -21,19 +22,19 @@ declare global {
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
     try {
         const errors = (req as any).validationErrors || [];
-        if (!errors.isEmpty()) {
+        if (errors.length > 0) {
             const response: IApiResponse = {
                 success: false,
-                errors: errors.array()
+                errors: errors
             };
             res.status(400).json(response);
             return;
         }
 
-        const bookingData: CreateBookingRequest = req.body;
+        const { vehicleId, fromPincode, toPincode, startTime, customerId } = req.body;
 
-        // Check if vehicle exists and is available
-        const vehicleDoc = await Vehicle.findById(bookingData.vehicle);
+        // Check if vehicle exists
+        const vehicleDoc = await Vehicle.findById(vehicleId);
         if (!vehicleDoc) {
             const response: IApiResponse = {
                 success: false,
@@ -43,30 +44,22 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             return;
         }
 
-        if (!vehicleDoc.isAvailable) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Vehicle is not available'
-            };
-            res.status(400).json(response);
-            return;
-        }
+        // Calculate estimated ride duration based on pincodes
+        const fromPin = parseInt(fromPincode);
+        const toPin = parseInt(toPincode);
+        const estimatedRideDurationHours = Math.abs(fromPin - toPin) % 24;
 
-        // Check for overlapping bookings
+        // Calculate bookingEndTime = startTime + estimatedRideDurationHours
+        const startTimeDate = new Date(startTime);
+        const bookingEndTime = new Date(startTimeDate.getTime() + estimatedRideDurationHours * 60 * 60 * 1000);
+
+        // Re-verify that the vehicle does NOT have any conflicting bookings for the calculated time window
         const overlappingBooking = await Booking.findOne({
-            vehicle: bookingData.vehicle,
+            vehicle: vehicleId,
             $or: [
                 {
-                    startTime: { $lte: new Date(bookingData.startTime) },
-                    endTime: { $gte: new Date(bookingData.startTime) }
-                },
-                {
-                    startTime: { $lte: new Date(bookingData.endTime) },
-                    endTime: { $gte: new Date(bookingData.endTime) }
-                },
-                {
-                    startTime: { $gte: new Date(bookingData.startTime) },
-                    endTime: { $lte: new Date(bookingData.endTime) }
+                    startTime: { $lte: bookingEndTime },
+                    endTime: { $gte: startTimeDate }
                 }
             ],
             status: { $in: ['pending', 'confirmed', 'in_progress'] }
@@ -75,248 +68,40 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         if (overlappingBooking) {
             const response: IApiResponse = {
                 success: false,
-                error: 'Vehicle is already booked for the selected time period'
+                error: 'Vehicle is already booked for an overlapping time slot'
             };
             res.status(409).json(response);
             return;
         }
 
-        // Calculate total price based on actual duration (not rounded up)
-        const durationMs = new Date(bookingData.endTime).getTime() - new Date(bookingData.startTime).getTime();
-        const totalHours = durationMs / (1000 * 60 * 60); // Actual hours as decimal
-        const totalPrice = totalHours * vehicleDoc.pricePerHour;
-
         // Create booking
         const booking = new Booking({
-            vehicle: bookingData.vehicle,
-            user: req.user!.id,
-            startTime: new Date(bookingData.startTime),
-            endTime: new Date(bookingData.endTime),
-            totalHours,
-            totalPrice,
-            pickupLocation: bookingData.pickupLocation,
-            dropoffLocation: bookingData.dropoffLocation,
-            estimatedRideDurationHours: bookingData.estimatedRideDurationHours
+            vehicle: vehicleId,
+            startTime: startTimeDate,
+            endTime: bookingEndTime,
+            totalHours: estimatedRideDurationHours,
+            totalPrice: 0, // No pricing logic in requirements
+            pickupLocation: {
+                pincode: fromPincode,
+                city: 'Unknown', // Not in requirements
+                address: 'Unknown' // Not in requirements
+            },
+            dropoffLocation: {
+                pincode: toPincode,
+                city: 'Unknown', // Not in requirements
+                address: 'Unknown' // Not in requirements
+            },
+            estimatedRideDurationHours,
+            customerId: customerId || 'default_customer_id' // Use provided customerId or default
         });
 
-        await booking.save();
-
-        // Update vehicle availability
-        vehicleDoc.isAvailable = false;
-        await vehicleDoc.save();
-
+        const savedBooking = await booking.save();
+ 
         const response: IApiResponse = {
             success: true,
-            data: booking
+            data: savedBooking || booking
         };
         res.status(201).json(response);
-    } catch (error) {
-        const response: IApiResponse = {
-            success: false,
-            error: (error as Error).message
-        };
-        res.status(500).json(response);
-    }
-};
-
-// @desc    Get available vehicles
-// @route   GET /api/vehicles/available
-// @access  Public
-export const getAvailableVehicles = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const query: AvailableVehiclesQuery = req.query;
-
-        // Build query
-        let mongoQuery: any = { isAvailable: true };
-
-        // Add capacity filter
-        if (query.capacity) {
-            mongoQuery.capacity = { $gte: parseInt(query.capacity) };
-        }
-
-        // Add location filter
-        if (query.pickupPincode) {
-            mongoQuery['location.pincode'] = query.pickupPincode;
-        }
-
-        // Find vehicles that match basic criteria
-        const vehicles = await Vehicle.find(mongoQuery);
-
-        // Filter out vehicles with overlapping bookings
-        const availableVehicles = [];
-        for (const vehicle of vehicles) {
-            if (query.startTime && query.endTime) {
-                const overlappingBooking = await Booking.findOne({
-                    vehicle: vehicle._id,
-                    $or: [
-                        {
-                            startTime: { $lte: new Date(query.startTime) },
-                            endTime: { $gte: new Date(query.startTime) }
-                        },
-                        {
-                            startTime: { $lte: new Date(query.endTime) },
-                            endTime: { $gte: new Date(query.endTime) }
-                        },
-                        {
-                            startTime: { $gte: new Date(query.startTime) },
-                            endTime: { $lte: new Date(query.endTime) }
-                        }
-                    ],
-                    status: { $in: ['pending', 'confirmed', 'in_progress'] }
-                });
-
-                if (!overlappingBooking) {
-                    availableVehicles.push(vehicle);
-                }
-            } else {
-                availableVehicles.push(vehicle);
-            }
-        }
-
-        const response: IApiResponse = {
-            success: true,
-            count: availableVehicles.length,
-            estimatedRideDurationHours: query.estimatedRideDurationHours ? parseFloat(query.estimatedRideDurationHours) : 1,
-            data: availableVehicles
-        };
-        res.json(response);
-    } catch (error) {
-        const response: IApiResponse = {
-            success: false,
-            error: (error as Error).message
-        };
-        res.status(500).json(response);
-    }
-};
-
-// @desc    Get user's bookings
-// @route   GET /api/bookings/my-bookings
-// @access  Private
-export const getMyBookings = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const bookings = await Booking.find({ user: req.user!.id })
-            .populate('vehicle', 'name type capacity pricePerHour')
-            .sort('-createdAt');
-
-        const response: IApiResponse = {
-            success: true,
-            count: bookings.length,
-            data: bookings
-        };
-        res.json(response);
-    } catch (error) {
-        const response: IApiResponse = {
-            success: false,
-            error: (error as Error).message
-        };
-        res.status(500).json(response);
-    }
-};
-
-// @desc    Cancel a booking
-// @route   PUT /api/bookings/:id/cancel
-// @access  Private
-export const cancelBooking = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const booking = await Booking.findById(req.params.id);
-
-        if (!booking) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Booking not found'
-            };
-            res.status(404).json(response);
-            return;
-        }
-
-        // Check if user owns the booking
-        if (booking.user.toString() !== req.user!.id) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Not authorized to cancel this booking'
-            };
-            res.status(401).json(response);
-            return;
-        }
-
-        // Check if booking can be cancelled
-        if (['completed', 'cancelled'].includes(booking.status)) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Booking cannot be cancelled'
-            };
-            res.status(400).json(response);
-            return;
-        }
-
-        // Update booking status
-        booking.status = 'cancelled';
-        await booking.save();
-
-        // Make vehicle available again
-        const vehicle = await Vehicle.findById(booking.vehicle);
-        if (vehicle) {
-            vehicle.isAvailable = true;
-            await vehicle.save();
-        }
-
-        const response: IApiResponse = {
-            success: true,
-            data: booking
-        };
-        res.json(response);
-    } catch (error) {
-        const response: IApiResponse = {
-            success: false,
-            error: (error as Error).message
-        };
-        res.status(500).json(response);
-    }
-};
-
-// @desc    Delete a booking
-// @route   DELETE /api/bookings/:id
-// @access  Private
-export const deleteBooking = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const booking = await Booking.findById(req.params.id);
-
-        if (!booking) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Booking not found'
-            };
-            res.status(404).json(response);
-            return;
-        }
-
-        // Check if user owns the booking
-        if (booking.user.toString() !== req.user!.id) {
-            const response: IApiResponse = {
-                success: false,
-                error: 'Not authorized to delete this booking'
-            };
-            res.status(401).json(response);
-            return;
-        }
-
-        // Make vehicle available again if booking was active
-        if (['pending', 'confirmed'].includes(booking.status)) {
-            const vehicle = await Vehicle.findById(booking.vehicle);
-            if (vehicle) {
-                vehicle.isAvailable = true;
-                await vehicle.save();
-            }
-        }
-
-        // Delete the booking
-        await Booking.findByIdAndDelete(req.params.id);
-
-        const response: IApiResponse = {
-            success: true,
-            message: 'Booking deleted successfully'
-        };
-        res.json(response);
     } catch (error) {
         const response: IApiResponse = {
             success: false,

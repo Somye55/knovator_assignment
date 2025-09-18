@@ -10,11 +10,10 @@ interface SearchAndBookProps {
 
 export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
   const [searchParams, setSearchParams] = useState({
-    capacity: '',
-    pickupPincode: '',
+    capacityRequired: '',
+    fromPincode: '',
+    toPincode: '',
     startTime: '',
-    endTime: '',
-    estimatedRideDurationHours: '1',
   });
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -33,11 +32,10 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
 
     try {
       const response = await getAvailableVehicles({
-        capacity: searchParams.capacity ? parseInt(searchParams.capacity) : undefined,
-        pickupPincode: searchParams.pickupPincode || undefined,
+        capacityRequired: searchParams.capacityRequired ? parseInt(searchParams.capacityRequired) : undefined,
+        fromPincode: searchParams.fromPincode || undefined,
+        toPincode: searchParams.toPincode || undefined,
         startTime: searchParams.startTime || undefined,
-        endTime: searchParams.endTime || undefined,
-        estimatedRideDurationHours: parseFloat(searchParams.estimatedRideDurationHours),
       });
 
       if (response.success && response.data) {
@@ -62,18 +60,18 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
       const bookingData = {
         vehicle: vehicleId,
         startTime: searchParams.startTime,
-        endTime: searchParams.endTime,
+        endTime: new Date(new Date(searchParams.startTime).getTime() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours later
         pickupLocation: {
-          pincode: searchParams.pickupPincode,
+          pincode: searchParams.fromPincode || '110001',
           city: 'Delhi', // In a real app, this would come from user input or geocoding
           address: '123 Main Street', // In a real app, this would come from user input
         },
         dropoffLocation: {
-          pincode: searchParams.pickupPincode,
+          pincode: searchParams.toPincode || '110002',
           city: 'Delhi', // In a real app, this would come from user input or geocoding
           address: '456 Another Street', // In a real app, this would come from user input
         },
-        estimatedRideDurationHours: parseFloat(searchParams.estimatedRideDurationHours),
+        estimatedRideDurationHours: 2, // Default 2 hours
       };
 
       const response = await createBooking(bookingData);
@@ -114,31 +112,31 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 mb-1">
-                  Min Capacity
+                <label htmlFor="capacityRequired" className="block text-sm font-medium text-gray-700 mb-1">
+                  Capacity Required (KG)
                 </label>
                 <input
                   type="number"
-                  id="capacity"
-                  name="capacity"
-                  value={searchParams.capacity}
+                  id="capacityRequired"
+                  name="capacityRequired"
+                  value={searchParams.capacityRequired}
                   onChange={handleInputChange}
                   min="1"
                   max="15"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 4"
+                  placeholder="e.g., 500"
                 />
               </div>
 
               <div>
-                <label htmlFor="pickupPincode" className="block text-sm font-medium text-gray-700 mb-1">
-                  Pickup Pincode
+                <label htmlFor="fromPincode" className="block text-sm font-medium text-gray-700 mb-1">
+                  From Pincode
                 </label>
                 <input
                   type="text"
-                  id="pickupPincode"
-                  name="pickupPincode"
-                  value={searchParams.pickupPincode}
+                  id="fromPincode"
+                  name="fromPincode"
+                  value={searchParams.fromPincode}
                   onChange={handleInputChange}
                   pattern="\d{6}"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -147,18 +145,18 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
               </div>
 
               <div>
-                <label htmlFor="estimatedRideDurationHours" className="block text-sm font-medium text-gray-700 mb-1">
-                  Est. Duration (hours)
+                <label htmlFor="toPincode" className="block text-sm font-medium text-gray-700 mb-1">
+                  To Pincode
                 </label>
                 <input
-                  type="number"
-                  id="estimatedRideDurationHours"
-                  name="estimatedRideDurationHours"
-                  value={searchParams.estimatedRideDurationHours}
+                  type="text"
+                  id="toPincode"
+                  name="toPincode"
+                  value={searchParams.toPincode}
                   onChange={handleInputChange}
-                  min="0.5"
-                  step="0.5"
+                  pattern="\d{6}"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="6-digit pincode"
                 />
               </div>
 
@@ -173,31 +171,16 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div>
                 <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Time
+                  Start Time (ISO Date format)
                 </label>
                 <input
                   type="datetime-local"
                   id="startTime"
                   name="startTime"
                   value={searchParams.startTime}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">
-                  End Time
-                </label>
-                <input
-                  type="datetime-local"
-                  id="endTime"
-                  name="endTime"
-                  value={searchParams.endTime}
                   onChange={handleInputChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -233,7 +216,7 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
           </div>
         )}
 
-        {!loading && vehicles.length === 0 && searchParams.pickupPincode && (
+        {!loading && vehicles.length === 0 && (searchParams.fromPincode || searchParams.capacityRequired) && (
           <div className="text-center py-8">
             <p className="text-gray-600">No vehicles found matching your criteria.</p>
           </div>
@@ -249,7 +232,7 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                 <VehicleCard
                   key={vehicle._id}
                   vehicle={vehicle}
-                  estimatedRideDurationHours={parseFloat(searchParams.estimatedRideDurationHours)}
+                  estimatedRideDurationHours={2}
                   onBookNow={handleBookNow}
                   isBooking={bookingLoading === vehicle._id}
                 />
