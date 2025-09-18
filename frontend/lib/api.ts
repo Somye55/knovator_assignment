@@ -4,20 +4,25 @@ export interface Vehicle {
   _id: string;
   name: string;
   type?: string;
+  // capacity is the frontend-friendly name (backend uses capacityKg)
   capacity: number;
+  // tyres count (backend includes this)
+  tyres?: number;
   pricePerHour?: number;
   location?: {
     pincode?: string;
     city?: string;
   };
-  features: string[];
-  images: string[];
+  // availability & metadata
   isAvailable: boolean;
-  owner: {
+  // owner is optional in this project (backend may omit it)
+  owner?: {
     _id: string;
     name: string;
     email: string;
   };
+  // estimated ride duration returned by backend for availability queries
+  estimatedRideDurationHours?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -122,9 +127,68 @@ export async function getAvailableVehicles(params: {
     }
   });
 
-  return apiRequest<{ data: Vehicle[]; count: number }>(
-    `/api/vehicles/available?${queryParams.toString()}`
-  );
+  // Call the backend (use unknown so we can validate structure safely)
+  const raw = await apiRequest<unknown>(`/api/vehicles/available?${queryParams.toString()}`);
+
+  // If call failed, return a normalized error response
+  if (!raw.success) {
+    return { success: false, error: raw.error ?? 'Failed to fetch available vehicles' };
+  }
+
+  // Normalize vehicle shape to frontend-friendly Vehicle interface
+  const payload = raw.data as { data?: unknown[]; count?: number } | undefined;
+  const rawList = Array.isArray(payload?.data) ? (payload!.data as unknown[]) : [];
+
+  const list: Vehicle[] = rawList.map((item) => {
+    const v = item as Record<string, unknown>;
+    const location = typeof v['location'] === 'object' && v['location'] !== null ? (v['location'] as Record<string, unknown>) : undefined;
+    const ownerObj = typeof v['owner'] === 'object' && v['owner'] !== null ? (v['owner'] as Record<string, unknown>) : undefined;
+
+    const capacityVal =
+      typeof v['capacity'] === 'number'
+        ? (v['capacity'] as number)
+        : typeof v['capacityKg'] === 'number'
+        ? (v['capacityKg'] as number)
+        : Number(v['capacity'] ?? v['capacityKg'] ?? 0);
+
+    const isAvailableVal = typeof v['isAvailable'] === 'boolean' ? (v['isAvailable'] as boolean) : true;
+    const estimatedVal = typeof v['estimatedRideDurationHours'] === 'number' ? (v['estimatedRideDurationHours'] as number) : undefined;
+ 
+    return {
+      _id: String(v['_id'] ?? v['id'] ?? ''),
+      name: String(v['name'] ?? 'Unnamed vehicle'),
+      type: typeof v['type'] === 'string' ? (v['type'] as string) : undefined,
+      capacity: capacityVal,
+      // map tyres if provided by backend
+      tyres:
+        typeof v['tyres'] === 'number'
+          ? (v['tyres'] as number)
+          : Number(v['tyres'] ?? 0),
+      pricePerHour: typeof v['pricePerHour'] === 'number' ? (v['pricePerHour'] as number) : undefined,
+      location: location
+        ? {
+            pincode: typeof location['pincode'] === 'string' ? (location['pincode'] as string) : undefined,
+            city: typeof location['city'] === 'string' ? (location['city'] as string) : undefined,
+          }
+        : undefined,
+      isAvailable: isAvailableVal,
+      owner: ownerObj
+        ? {
+            _id: String(ownerObj['_id'] ?? ownerObj['id'] ?? ''),
+            name: String(ownerObj['name'] ?? ''),
+            email: String(ownerObj['email'] ?? ''),
+          }
+        : undefined,
+      estimatedRideDurationHours: estimatedVal,
+      createdAt: String(v['createdAt'] ?? new Date().toISOString()),
+      updatedAt: String(v['updatedAt'] ?? new Date().toISOString()),
+    } as Vehicle;
+  });
+
+  return {
+    success: true,
+    data: { data: list, count: payload?.count ?? list.length },
+  };
 }
 
 export async function getAllVehicles(): Promise<ApiResponse<{ data: Vehicle[]; count: number }>> {
@@ -136,9 +200,15 @@ export async function getVehicle(id: string): Promise<ApiResponse<Vehicle>> {
 }
 
 export async function createVehicle(vehicleData: CreateVehicleData): Promise<ApiResponse<Vehicle>> {
+  // Map frontend form shape to backend expected shape (backend expects capacityKg)
+  const body = {
+    name: vehicleData.name,
+    capacityKg: vehicleData.capacity,
+    tyres: vehicleData.tyres,
+  };
   return apiRequest<Vehicle>('/api/vehicles', {
     method: 'POST',
-    body: JSON.stringify(vehicleData),
+    body: JSON.stringify(body),
   });
 }
 
@@ -160,9 +230,19 @@ export async function deleteVehicle(id: string): Promise<ApiResponse<{ message: 
 
 // Booking API functions
 export async function createBooking(bookingData: CreateBookingData): Promise<ApiResponse<Booking>> {
+  // The backend expects: { vehicleId, fromPincode, toPincode, startTime, customerId }
+  // Map the frontend booking shape to the backend required shape.
+  const body = {
+    vehicleId: bookingData.vehicle,
+    fromPincode: bookingData.pickupLocation?.pincode ?? '',
+    toPincode: bookingData.dropoffLocation?.pincode ?? '',
+    startTime: bookingData.startTime,
+    customerId: 'frontend_customer', // simple static customer id for frontend usage
+  };
+
   return apiRequest<Booking>('/api/bookings', {
     method: 'POST',
-    body: JSON.stringify(bookingData),
+    body: JSON.stringify(body),
   });
 }
 

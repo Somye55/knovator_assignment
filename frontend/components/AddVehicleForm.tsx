@@ -13,7 +13,7 @@ export default function AddVehicleForm({
 }: AddVehicleFormProps) {
   const [formData, setFormData] = useState<CreateVehicleData>({
     name: "",
-    capacity: 4,
+    capacity: 500,
     tyres: 4,
   });
 
@@ -41,6 +41,18 @@ export default function AddVehicleForm({
     setError(null);
     setSuccess(false);
 
+    // Client-side validation to match backend rules: capacity 20-3000, tyres 2-6
+    if (formData.capacity < 20 || formData.capacity > 3000) {
+      setError('Capacity must be between 20 and 3000 KG');
+      setLoading(false);
+      return;
+    }
+    if (formData.tyres < 2 || formData.tyres > 6) {
+      setError('Number of tyres must be between 2 and 6');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await createVehicle(formData);
 
@@ -48,7 +60,7 @@ export default function AddVehicleForm({
         setSuccess(true);
         setFormData({
           name: "",
-          capacity: 4,
+          capacity: 500,
           tyres: 4,
         });
 
@@ -116,8 +128,8 @@ export default function AddVehicleForm({
               value={formData.capacity}
               onChange={handleInputChange}
               required
-              min="1"
-              max="15"
+              min="20"
+              max="3000"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -137,7 +149,7 @@ export default function AddVehicleForm({
               onChange={handleInputChange}
               required
               min="2"
-              max="10"
+              max="6"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -149,7 +161,7 @@ export default function AddVehicleForm({
             onClick={() => {
               setFormData({
                 name: "",
-                capacity: 4,
+                capacity: 500,
                 tyres: 4,
               });
               setError(null);

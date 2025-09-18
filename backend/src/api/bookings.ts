@@ -11,4 +11,8 @@ router.post('/',
   bookingController.createBooking
 );
 
+// Return bookings for a customer (frontend uses this to show "My bookings").
+// Accepts optional query param `customerId`; defaults to the frontend static id.
+router.get('/my-bookings', bookingController.getMyBookings);
+
 export default router;

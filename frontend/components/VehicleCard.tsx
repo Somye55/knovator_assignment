@@ -7,72 +7,41 @@ interface VehicleCardProps {
   isBooking?: boolean;
 }
 
-export default function VehicleCard({ 
-  vehicle, 
-  estimatedRideDurationHours, 
-  onBookNow, 
-  isBooking = false 
+export default function VehicleCard({
+  vehicle,
+  estimatedRideDurationHours,
+  onBookNow,
+  isBooking = false,
 }: VehicleCardProps) {
-  const totalPrice = (vehicle.pricePerHour || 0) * estimatedRideDurationHours;
-
-  const getFeatureIcon = (feature: string) => {
-    switch (feature) {
-      case 'AC': return '❄️';
-      case 'GPS': return '📍';
-      case 'Music System': return '🎵';
-      case 'Bluetooth': return '🔊';
-      case 'USB Charging': return '🔌';
-      case 'Child Seat': return '👶';
-      default: return '✓';
-    }
-  };
-
+  // Display strictly the fields required by the spec:
+  // - Vehicle Name
+  // - Capacity (KG)
+  // - Tyres
+  // - Estimated Ride Duration
+  // - Book Now button
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
+        <div className="mb-4">
+          <h3 className="text-xl font-semibold text-gray-900">{vehicle.name}</h3>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mb-6">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">{vehicle.name}</h3>
-            <p className="text-gray-600">{vehicle.type || 'Vehicle Type'}</p>
+            <div className="text-xs text-gray-500">Capacity (KG)</div>
+            <div className="text-sm text-gray-900">{vehicle.capacity}</div>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold text-blue-600">₹{vehicle.pricePerHour || 'N/A'}<span className="text-sm font-normal text-gray-500">/hr</span></p>
-            <p className="text-sm text-gray-500">Total: ₹{totalPrice}</p>
+          <div>
+            <div className="text-xs text-gray-500">Tyres</div>
+            <div className="text-sm text-gray-900">{vehicle.tyres ?? 'N/A'}</div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-gray-500">👥</span>
-            <span className="text-sm text-gray-700">{vehicle.capacity} seats</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-gray-500">📍</span>
-            <span className="text-sm text-gray-700">{vehicle.location?.city || 'N/A'}, {vehicle.location?.pincode || 'N/A'}</span>
+          <div>
+            <div className="text-xs text-gray-500">Est. ride</div>
+            <div className="text-sm text-gray-900">{estimatedRideDurationHours}h</div>
           </div>
         </div>
 
-        {vehicle.features.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Features:</h4>
-            <div className="flex flex-wrap gap-2">
-              {vehicle.features.map((feature: string) => (
-                <span
-                  key={feature}
-                  className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                >
-                  <span className="mr-1">{getFeatureIcon(feature)}</span>
-                  {feature}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-500">
-            Est. ride: {estimatedRideDurationHours}h
-          </div>
+        <div className="flex justify-end">
           <button
             onClick={() => onBookNow(vehicle._id)}
             disabled={!vehicle.isAvailable || isBooking}

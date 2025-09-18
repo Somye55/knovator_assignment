@@ -20,7 +20,7 @@ const bookingSchema = new Schema<IBookingDocument>({
     totalHours: {
         type: Number,
         required: [true, 'Total hours is required'],
-        min: [1, 'Total hours must be at least 1']
+        min: [0.5, 'Total hours must be at least 0.5']
     },
     totalPrice: {
         type: Number,

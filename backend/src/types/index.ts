@@ -11,8 +11,7 @@ export interface IVehicle {
     pincode?: string;
     city?: string;
   };
-  features: string[];
-  images: string[];
+  // features and images removed per requirements
   isAvailable: boolean;
   createdAt: Date;
   updatedAt: Date;

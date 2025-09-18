@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { getAvailableVehicles, createBooking, Vehicle } from '@/lib/api';
 import VehicleCard from './VehicleCard';
+import BookingConfirmModal from './BookingConfirmModal';
 
 interface SearchAndBookProps {
   onVehicleBooked?: () => void;
@@ -19,9 +20,16 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // booking / modal state
   const [bookingLoading, setBookingLoading] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [modalConfirming, setModalConfirming] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,11 +39,34 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
     setBookingError(null);
 
     try {
+      // Client-side validation: backend requires capacityRequired, fromPincode, toPincode and startTime
+      if (
+        !searchParams.capacityRequired ||
+        !searchParams.fromPincode ||
+        !searchParams.toPincode ||
+        !searchParams.startTime
+      ) {
+        setError('Please provide Capacity Required, From Pincode, To Pincode and Start Time before searching.');
+        setLoading(false);
+        return;
+      }
+
+      // Validate capacity range (20 - 1500 KG) to match backend constraints
+      const capacityNum = Number(searchParams.capacityRequired);
+      if (Number.isNaN(capacityNum) || capacityNum < 20 || capacityNum > 1500) {
+        setError('Capacity Required must be a number between 20 and 1500 KG.');
+        setLoading(false);
+        return;
+      }
+
+      // Convert startTime to ISO before sending (datetime-local returns local string)
+      const startTimeIso = new Date(searchParams.startTime).toISOString();
+
       const response = await getAvailableVehicles({
-        capacityRequired: searchParams.capacityRequired ? parseInt(searchParams.capacityRequired) : undefined,
-        fromPincode: searchParams.fromPincode || undefined,
-        toPincode: searchParams.toPincode || undefined,
-        startTime: searchParams.startTime || undefined,
+        capacityRequired: capacityNum,
+        fromPincode: searchParams.fromPincode,
+        toPincode: searchParams.toPincode,
+        startTime: startTimeIso,
       });
 
       if (response.success && response.data) {
@@ -52,26 +83,43 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
     }
   };
 
-  const handleBookNow = async (vehicleId: string) => {
-    setBookingLoading(vehicleId);
+  const handleBookNow = (vehicleId: string) => {
+    // Open confirmation modal with selected vehicle
+    const vehicle = vehicles.find(v => v._id === vehicleId) || null;
+    setSelectedVehicle(vehicle);
+    setModalError(null);
+    setModalOpen(true);
+  };
+
+  // Called when user confirms in modal
+  const confirmBooking = async () => {
+    if (!selectedVehicle) return;
+    const vehicleId = selectedVehicle._id;
+    setModalConfirming(true);
+    setModalError(null);
     setBookingError(null);
+    setBookingLoading(vehicleId);
 
     try {
+      const estimatedRideDurationHours = selectedVehicle.estimatedRideDurationHours ?? 2;
+      const startISO = searchParams.startTime ? new Date(searchParams.startTime).toISOString() : new Date().toISOString();
+      const endISO = new Date(new Date(startISO).getTime() + estimatedRideDurationHours * 60 * 60 * 1000).toISOString();
+
       const bookingData = {
         vehicle: vehicleId,
-        startTime: searchParams.startTime,
-        endTime: new Date(new Date(searchParams.startTime).getTime() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours later
+        startTime: startISO,
+        endTime: endISO,
         pickupLocation: {
           pincode: searchParams.fromPincode || '110001',
-          city: 'Delhi', // In a real app, this would come from user input or geocoding
-          address: '123 Main Street', // In a real app, this would come from user input
+          city: 'Delhi',
+          address: '123 Main Street',
         },
         dropoffLocation: {
           pincode: searchParams.toPincode || '110002',
-          city: 'Delhi', // In a real app, this would come from user input or geocoding
-          address: '456 Another Street', // In a real app, this would come from user input
+          city: 'Delhi',
+          address: '456 Another Street',
         },
-        estimatedRideDurationHours: 2, // Default 2 hours
+        estimatedRideDurationHours,
       };
 
       const response = await createBooking(bookingData);
@@ -80,16 +128,24 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
         setBookingSuccess(true);
         // Remove the booked vehicle from the list
         setVehicles(prev => prev.filter(v => v._id !== vehicleId));
-        
+
         if (onVehicleBooked) {
           onVehicleBooked();
         }
+
+        // Close modal on success
+        setModalOpen(false);
+        setSelectedVehicle(null);
       } else {
-        setBookingError(response.error || 'Failed to create booking');
+        const err = response.error || 'Failed to create booking';
+        setModalError(err);
+        setBookingError(err);
       }
-    } catch {
+    } catch (err) {
+      setModalError('An unexpected error occurred');
       setBookingError('An unexpected error occurred');
     } finally {
+      setModalConfirming(false);
       setBookingLoading(null);
     }
   };
@@ -121,8 +177,8 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                   name="capacityRequired"
                   value={searchParams.capacityRequired}
                   onChange={handleInputChange}
-                  min="1"
-                  max="15"
+                  min="20"
+                  max="1500"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., 500"
                 />
@@ -232,11 +288,29 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                 <VehicleCard
                   key={vehicle._id}
                   vehicle={vehicle}
-                  estimatedRideDurationHours={2}
+                  estimatedRideDurationHours={vehicle.estimatedRideDurationHours ?? 0}
                   onBookNow={handleBookNow}
                   isBooking={bookingLoading === vehicle._id}
                 />
               ))}
+
+              {/* Booking confirmation modal */}
+              <BookingConfirmModal
+                isOpen={modalOpen}
+                onClose={() => {
+                  setModalOpen(false);
+                  setSelectedVehicle(null);
+                  setModalError(null);
+                }}
+                vehicle={selectedVehicle}
+                fromPincode={searchParams.fromPincode}
+                toPincode={searchParams.toPincode}
+                startTimeIso={searchParams.startTime ? new Date(searchParams.startTime).toISOString() : new Date().toISOString()}
+                estimatedRideDurationHours={selectedVehicle?.estimatedRideDurationHours ?? 0}
+                onConfirm={confirmBooking}
+                isConfirming={modalConfirming}
+                error={modalError}
+              />
             </div>
           </div>
         )}

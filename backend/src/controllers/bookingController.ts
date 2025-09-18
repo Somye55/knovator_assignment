@@ -117,3 +117,35 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         res.status(500).json(response);
     }
 };
+
+/**
+ * @desc    Get bookings for a customer
+ * @route   GET /api/bookings/my-bookings
+ * @access  Private (simple public implementation for frontend demo)
+ *
+ * Accepts optional query param `customerId`. If not provided, defaults to the frontend static id used by the client.
+ */
+export const getMyBookings = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const customerId = String(req.query.customerId ?? 'frontend_customer');
+
+        // Fetch bookings for the customer and include vehicle details
+        const bookings = await Booking.find({ customerId })
+            .populate('vehicle')
+            .sort({ createdAt: -1 });
+
+        const response: IApiResponse = {
+            success: true,
+            data: bookings,
+            count: bookings.length
+        };
+
+        res.status(200).json(response);
+    } catch (error) {
+        const response: IApiResponse = {
+            success: false,
+            error: (error as Error).message
+        };
+        res.status(500).json(response);
+    }
+};

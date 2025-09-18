@@ -9,14 +9,15 @@ export const vehicleValidation = (req: any, res: any, next: any) => {
     }
 
     const capacityNum = Number(capacityKg);
-    // Allow large realistic capacities (tests / real world may use 1000+)
-    if (!capacityKg || Number.isNaN(capacityNum) || capacityNum < 1 || capacityNum > 1000000) {
-        errors.push('Capacity must be between 1 and 1000000');
+    // Enforce capacity between 20kg and 3000kg per requirements
+    if (!capacityKg || Number.isNaN(capacityNum) || capacityNum < 20 || capacityNum > 3000) {
+        errors.push('Capacity must be between 20 and 3000 (KG)');
     }
 
     const tyresNum = Number(tyres);
-    if (!tyres || Number.isNaN(tyresNum) || tyresNum < 1 || tyresNum > 6) {
-        errors.push('Number of tyres must be between 1 and 6');
+    // Enforce minimum of 2 tyres (and keep a reasonable upper bound)
+    if (!tyres || Number.isNaN(tyresNum) || tyresNum < 2 || tyresNum > 6) {
+        errors.push('Number of tyres must be between 2 and 6');
     }
     
     if (errors.length > 0) {
