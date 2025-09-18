@@ -2,7 +2,7 @@
 
 export default function Loader() {
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-90 backdrop-blur-sm flex items-center justify-center z-50" style={{ top: '64px' }}>
+    <div className="fixed top-16 left-0 right-0 bottom-0 bg-white bg-opacity-90 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="text-center">
         {/* Pulse animation circle */}
         <div className="relative">
