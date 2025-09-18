@@ -32,7 +32,7 @@ export const vehicleValidation = (req: any, res: any, next: any) => {
 };
 
 export const bookingValidation = (req: any, res: any, next: any) => {
-    const { vehicleId, fromPincode, toPincode, startTime, customerId } = req.body;
+    const { vehicleId, from, to, startTime, customerId } = req.body;
     
     const errors: string[] = [];
     
@@ -40,12 +40,34 @@ export const bookingValidation = (req: any, res: any, next: any) => {
         errors.push('Vehicle ID is required');
     }
     
-    if (!fromPincode || !/^\d{6}$/.test(fromPincode)) {
-        errors.push('From pincode must be a 6-digit number');
+    // Validate from location
+    if (!from || !from.name || !from.lat || !from.lon) {
+        errors.push('From location is required and must include name, lat, and lon');
+    } else {
+        if (typeof from.name !== 'string' || from.name.trim().length === 0) {
+            errors.push('From location name is required and must be a string');
+        }
+        if (typeof from.lat !== 'number' || from.lat < -90 || from.lat > 90) {
+            errors.push('From location latitude must be a number between -90 and 90');
+        }
+        if (typeof from.lon !== 'number' || from.lon < -180 || from.lon > 180) {
+            errors.push('From location longitude must be a number between -180 and 180');
+        }
     }
     
-    if (!toPincode || !/^\d{6}$/.test(toPincode)) {
-        errors.push('To pincode must be a 6-digit number');
+    // Validate to location
+    if (!to || !to.name || !to.lat || !to.lon) {
+        errors.push('To location is required and must include name, lat, and lon');
+    } else {
+        if (typeof to.name !== 'string' || to.name.trim().length === 0) {
+            errors.push('To location name is required and must be a string');
+        }
+        if (typeof to.lat !== 'number' || to.lat < -90 || to.lat > 90) {
+            errors.push('To location latitude must be a number between -90 and 90');
+        }
+        if (typeof to.lon !== 'number' || to.lon < -180 || to.lon > 180) {
+            errors.push('To location longitude must be a number between -180 and 180');
+        }
     }
     
     if (!startTime || Number.isNaN(Date.parse(startTime))) {

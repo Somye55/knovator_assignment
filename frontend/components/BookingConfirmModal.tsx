@@ -3,12 +3,18 @@
 import React from "react";
 import { Vehicle } from "@/lib/api";
 
+interface Location {
+  name: string;
+  lat: number;
+  lon: number;
+}
+
 interface BookingConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   vehicle: Vehicle | null;
-  fromPincode: string;
-  toPincode: string;
+  fromLocation: Location | null;
+  toLocation: Location | null;
   startTimeIso: string; // ISO string
   estimatedRideDurationHours: number;
   onConfirm: () => Promise<void>;
@@ -20,8 +26,8 @@ export default function BookingConfirmModal({
   isOpen,
   onClose,
   vehicle,
-  fromPincode,
-  toPincode,
+  fromLocation,
+  toLocation,
   startTimeIso,
   estimatedRideDurationHours,
   onConfirm,
@@ -74,7 +80,7 @@ export default function BookingConfirmModal({
               </div>
               <div>
                 <div className="text-xs text-gray-500">Pickup Location</div>
-                <div className="text-sm font-medium text-gray-900">Pincode: {fromPincode}</div>
+                <div className="text-sm font-medium text-gray-900">{fromLocation?.name || 'Not selected'}</div>
               </div>
             </div>
 
@@ -87,7 +93,7 @@ export default function BookingConfirmModal({
               </div>
               <div>
                 <div className="text-xs text-gray-500">Dropoff Location</div>
-                <div className="text-sm font-medium text-gray-900">Pincode: {toPincode}</div>
+                <div className="text-sm font-medium text-gray-900">{toLocation?.name || 'Not selected'}</div>
               </div>
             </div>
 

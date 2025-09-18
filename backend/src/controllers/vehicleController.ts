@@ -4,6 +4,7 @@ import Vehicle from '../models/Vehicle';
 import Booking from '../models/Booking';
 import expressValidator from 'express-validator';
 import { IApiResponse, CreateVehicleRequest } from '../types';
+import { calculateRideDuration } from '../utils/rideUtils';
 
 // Request augmentation is provided by src/types/express.d.ts
 
@@ -50,29 +51,29 @@ export const createVehicle = async (req: Request, res: Response): Promise<void> 
 // @access  Public
 export const getAvailableVehicles = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { capacityRequired, fromPincode, toPincode, startTime } = req.query;
+        const { capacityRequired, fromLat, fromLon, toLat, toLon, startTime } = req.query;
 
         // Validate required parameters
-        if (!capacityRequired || !fromPincode || !toPincode || !startTime) {
+        if (!capacityRequired || !fromLat || !fromLon || !toLat || !toLon || !startTime) {
             const response: IApiResponse = {
                 success: false,
-                error: 'Missing required parameters: capacityRequired, fromPincode, toPincode, startTime'
+                error: 'Missing required parameters: capacityRequired, fromLat, fromLon, toLat, toLon, startTime'
             };
             res.status(400).json(response);
             return;
         }
 
-        // Calculate estimated ride duration based on pincodes
-        const fromPin = parseInt(fromPincode as string);
-        const toPin = parseInt(toPincode as string);
-        const rawDiff = Math.abs(fromPin - toPin);
-        // Apply modulo 24 but treat differences that are exact multiples of 24 as 24 hours
-        let estimatedRideDurationHours = rawDiff % 24;
-        if (estimatedRideDurationHours === 0 && rawDiff !== 0) {
-            estimatedRideDurationHours = 24;
-        }
-        // Enforce minimum duration to match Booking schema (0.5 hours)
-        estimatedRideDurationHours = Math.max(estimatedRideDurationHours, 0.5);
+        // Calculate estimated ride duration based on coordinates
+        const fromCoords = {
+            lat: parseFloat(fromLat as string),
+            lon: parseFloat(fromLon as string)
+        };
+        const toCoords = {
+            lat: parseFloat(toLat as string),
+            lon: parseFloat(toLon as string)
+        };
+        
+        const estimatedRideDurationHours = calculateRideDuration(fromCoords, toCoords);
  
         // Calculate endTime = startTime + estimatedRideDurationHours
         const startTimeDate = new Date(startTime as string);

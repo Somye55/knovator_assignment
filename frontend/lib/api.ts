@@ -5,7 +5,7 @@ export interface Vehicle {
   name: string;
   type?: string;
   // capacity is the frontend-friendly name (backend uses capacityKg)
-  capacity: number;
+  capacityKg: number;
   // tyres count (backend includes this)
   tyres?: number;
   pricePerHour?: number;
@@ -63,15 +63,15 @@ export interface CreateBookingData {
   vehicle: string;
   startTime: string;
   endTime: string;
-  pickupLocation: {
-    pincode: string;
-    city: string;
-    address: string;
+  from: {
+    name: string;
+    lat: number;
+    lon: number;
   };
-  dropoffLocation: {
-    pincode: string;
-    city: string;
-    address: string;
+  to: {
+    name: string;
+    lat: number;
+    lon: number;
   };
   estimatedRideDurationHours: number;
 }
@@ -116,8 +116,10 @@ async function apiRequest<T>(
 // Vehicle API functions
 export async function getAvailableVehicles(params: {
   capacityRequired?: number;
-  fromPincode?: string;
-  toPincode?: string;
+  fromLat?: number;
+  fromLon?: number;
+  toLat?: number;
+  toLon?: number;
   startTime?: string;
 }): Promise<ApiResponse<{ data: Vehicle[]; count: number }>> {
   const queryParams = new URLSearchParams();
@@ -145,11 +147,11 @@ export async function getAvailableVehicles(params: {
     const ownerObj = typeof v['owner'] === 'object' && v['owner'] !== null ? (v['owner'] as Record<string, unknown>) : undefined;
 
     const capacityVal =
-      typeof v['capacity'] === 'number'
-        ? (v['capacity'] as number)
-        : typeof v['capacityKg'] === 'number'
+      typeof v['capacityKg'] === 'number'
         ? (v['capacityKg'] as number)
-        : Number(v['capacity'] ?? v['capacityKg'] ?? 0);
+        : typeof v['capacity'] === 'number'
+        ? (v['capacity'] as number)
+        : Number(v['capacityKg'] ?? v['capacity'] ?? 0);
 
     const isAvailableVal = typeof v['isAvailable'] === 'boolean' ? (v['isAvailable'] as boolean) : true;
     const estimatedVal = typeof v['estimatedRideDurationHours'] === 'number' ? (v['estimatedRideDurationHours'] as number) : undefined;
@@ -230,12 +232,12 @@ export async function deleteVehicle(id: string): Promise<ApiResponse<{ message: 
 
 // Booking API functions
 export async function createBooking(bookingData: CreateBookingData): Promise<ApiResponse<Booking>> {
-  // The backend expects: { vehicleId, fromPincode, toPincode, startTime, customerId }
+  // The backend expects: { vehicleId, from, to, startTime, customerId }
   // Map the frontend booking shape to the backend required shape.
   const body = {
     vehicleId: bookingData.vehicle,
-    fromPincode: bookingData.pickupLocation?.pincode ?? '',
-    toPincode: bookingData.dropoffLocation?.pincode ?? '',
+    from: bookingData.from,
+    to: bookingData.to,
     startTime: bookingData.startTime,
     customerId: 'frontend_customer', // simple static customer id for frontend usage
   };

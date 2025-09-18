@@ -4,6 +4,7 @@ import Booking from '../models/Booking';
 import Vehicle from '../models/Vehicle';
 import expressValidator from 'express-validator';
 import { IApiResponse, CreateBookingRequest } from '../types';
+import { calculateRideDuration } from '../utils/rideUtils';
 
 // Extend Express Request type
 declare global {
@@ -31,7 +32,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             return;
         }
 
-        const { vehicleId, fromPincode, toPincode, startTime, customerId } = req.body;
+        const { vehicleId, from, to, startTime, customerId } = req.body;
 
         // Check if vehicle exists
         const vehicleDoc = await Vehicle.findById(vehicleId);
@@ -44,17 +45,8 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             return;
         }
 
-        // Calculate estimated ride duration based on pincodes
-        const fromPin = parseInt(fromPincode);
-        const toPin = parseInt(toPincode);
-        const rawDiff = Math.abs(fromPin - toPin);
-        // Apply modulo 24 but treat differences that are exact multiples of 24 as 24 hours
-        let estimatedRideDurationHours = rawDiff % 24;
-        if (estimatedRideDurationHours === 0 && rawDiff !== 0) {
-            estimatedRideDurationHours = 24;
-        }
-        // Enforce minimum duration to match Booking schema (0.5 hours)
-        estimatedRideDurationHours = Math.max(estimatedRideDurationHours, 0.5);
+        // Calculate estimated ride duration based on coordinates
+        const estimatedRideDurationHours = calculateRideDuration(from, to);
  
         // Calculate bookingEndTime = startTime + estimatedRideDurationHours
         const startTimeDate = new Date(startTime);
@@ -89,14 +81,18 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             totalHours: estimatedRideDurationHours,
             totalPrice: 0, // No pricing logic in requirements
             pickupLocation: {
-                pincode: fromPincode,
+                name: from.name,
+                lat: from.lat,
+                lon: from.lon,
                 city: 'Unknown', // Not in requirements
-                address: 'Unknown' // Not in requirements
+                address: from.name // Use the location name as address
             },
             dropoffLocation: {
-                pincode: toPincode,
+                name: to.name,
+                lat: to.lat,
+                lon: to.lon,
                 city: 'Unknown', // Not in requirements
-                address: 'Unknown' // Not in requirements
+                address: to.name // Use the location name as address
             },
             estimatedRideDurationHours,
             customerId: customerId || 'default_customer_id' // Use provided customerId or default

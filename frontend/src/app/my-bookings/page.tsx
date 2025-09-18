@@ -157,7 +157,7 @@ export default function MyBookingsPage() {
                       </div>
                       <div>
                         <h3 className="text-xl font-semibold text-gray-900 mb-1">{booking.vehicle.name}</h3>
-                        <p className="text-gray-600">{booking.vehicle.type} • {booking.vehicle.capacity} seats</p>
+                        <p className="text-gray-600">{booking.vehicle.type} • {booking.vehicle.capacityKg} KG • {booking.vehicle.tyres} tyres</p>
                         <div className="flex items-center space-x-2 mt-2">
                           {getStatusBadge(booking.status)}
                           <span className="text-sm text-gray-500">•</span>
@@ -202,7 +202,7 @@ export default function MyBookingsPage() {
                       </div>
                       <p className="text-gray-900 font-medium mb-1">{booking.pickupLocation.address}</p>
                       <p className="text-sm text-gray-600 mb-2">
-                        {booking.pickupLocation.city}, {booking.pickupLocation.pincode}
+                        {booking.pickupLocation.city}
                       </p>
                       <p className="text-sm font-medium text-blue-600">{formatDate(booking.startTime)}</p>
                     </div>
@@ -219,7 +219,7 @@ export default function MyBookingsPage() {
                       </div>
                       <p className="text-gray-900 font-medium mb-1">{booking.dropoffLocation.address}</p>
                       <p className="text-sm text-gray-600 mb-2">
-                        {booking.dropoffLocation.city}, {booking.dropoffLocation.pincode}
+                        {booking.dropoffLocation.city}
                       </p>
                       <p className="text-sm font-medium text-blue-600">{formatDate(booking.endTime)}</p>
                     </div>

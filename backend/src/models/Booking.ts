@@ -28,10 +28,22 @@ const bookingSchema = new Schema<IBookingDocument>({
         min: [0, 'Total price cannot be negative']
     },
     pickupLocation: {
-        pincode: {
+        name: {
             type: String,
-            required: [true, 'Pickup pincode is required'],
-            match: [/^\d{6}$/, 'Please enter a valid 6-digit pincode']
+            required: [true, 'Pickup location name is required'],
+            trim: true
+        },
+        lat: {
+            type: Number,
+            required: [true, 'Pickup latitude is required'],
+            min: [-90, 'Latitude must be between -90 and 90'],
+            max: [90, 'Latitude must be between -90 and 90']
+        },
+        lon: {
+            type: Number,
+            required: [true, 'Pickup longitude is required'],
+            min: [-180, 'Longitude must be between -180 and 180'],
+            max: [180, 'Longitude must be between -180 and 180']
         },
         city: {
             type: String,
@@ -45,10 +57,22 @@ const bookingSchema = new Schema<IBookingDocument>({
         }
     },
     dropoffLocation: {
-        pincode: {
+        name: {
             type: String,
-            required: [true, 'Dropoff pincode is required'],
-            match: [/^\d{6}$/, 'Please enter a valid 6-digit pincode']
+            required: [true, 'Dropoff location name is required'],
+            trim: true
+        },
+        lat: {
+            type: Number,
+            required: [true, 'Dropoff latitude is required'],
+            min: [-90, 'Latitude must be between -90 and 90'],
+            max: [90, 'Latitude must be between -90 and 90']
+        },
+        lon: {
+            type: Number,
+            required: [true, 'Dropoff longitude is required'],
+            min: [-180, 'Longitude must be between -180 and 180'],
+            max: [180, 'Longitude must be between -180 and 180']
         },
         city: {
             type: String,

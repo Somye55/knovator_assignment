@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { getAvailableVehicles, createBooking, Vehicle } from '@/lib/api';
 import VehicleCard from './VehicleCard';
 import BookingConfirmModal from './BookingConfirmModal';
+import LocationAutocomplete, { Location } from './LocationAutocomplete';
 
 interface SearchAndBookProps {
   onVehicleBooked?: () => void;
@@ -12,10 +13,10 @@ interface SearchAndBookProps {
 export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
   const [searchParams, setSearchParams] = useState({
     capacityRequired: '',
-    fromPincode: '',
-    toPincode: '',
     startTime: '',
   });
+  const [fromLocation, setFromLocation] = useState<Location | null>(null);
+  const [toLocation, setToLocation] = useState<Location | null>(null);
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,14 +40,14 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
     setBookingError(null);
 
     try {
-      // Client-side validation: backend requires capacityRequired, fromPincode, toPincode and startTime
+      // Client-side validation: backend requires capacityRequired, fromLocation, toLocation and startTime
       if (
         !searchParams.capacityRequired ||
-        !searchParams.fromPincode ||
-        !searchParams.toPincode ||
+        !fromLocation ||
+        !toLocation ||
         !searchParams.startTime
       ) {
-        setError('Please provide Capacity Required, From Pincode, To Pincode and Start Time before searching.');
+        setError('Please provide Capacity Required, From Location, To Location and Start Time before searching.');
         setLoading(false);
         return;
       }
@@ -64,8 +65,10 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
 
       const response = await getAvailableVehicles({
         capacityRequired: capacityNum,
-        fromPincode: searchParams.fromPincode,
-        toPincode: searchParams.toPincode,
+        fromLat: fromLocation.lat,
+        fromLon: fromLocation.lon,
+        toLat: toLocation.lat,
+        toLon: toLocation.lon,
         startTime: startTimeIso,
       });
 
@@ -109,16 +112,8 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
         vehicle: vehicleId,
         startTime: startISO,
         endTime: endISO,
-        pickupLocation: {
-          pincode: searchParams.fromPincode || '110001',
-          city: 'Delhi',
-          address: '123 Main Street',
-        },
-        dropoffLocation: {
-          pincode: searchParams.toPincode || '110002',
-          city: 'Delhi',
-          address: '456 Another Street',
-        },
+        from: fromLocation,
+        to: toLocation,
         estimatedRideDurationHours,
       };
 
@@ -140,10 +135,10 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
         // Clear form after successful booking
         setSearchParams({
           capacityRequired: '',
-          fromPincode: '',
-          toPincode: '',
           startTime: '',
         });
+        setFromLocation(null);
+        setToLocation(null);
       } else {
         const err = response.error || 'Failed to create booking';
         setModalError(err);
@@ -164,6 +159,14 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleFromLocationSelect = (location: Location) => {
+    setFromLocation(location);
+  };
+
+  const handleToLocationSelect = (location: Location) => {
+    setToLocation(location);
   };
 
   return (
@@ -201,46 +204,34 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
               </div>
 
               <div>
-                <label htmlFor="fromPincode" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   <div className="flex items-center space-x-2">
                     <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span>From Pincode</span>
+                    <span>From Location</span>
                   </div>
                 </label>
-                <input
-                  type="text"
-                  id="fromPincode"
-                  name="fromPincode"
-                  value={searchParams.fromPincode}
-                  onChange={handleInputChange}
-                  pattern="\d{6}"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="6-digit pincode"
+                <LocationAutocomplete
+                  placeholder="Enter pickup location..."
+                  onLocationSelect={handleFromLocationSelect}
                 />
               </div>
 
               <div>
-                <label htmlFor="toPincode" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   <div className="flex items-center space-x-2">
                     <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span>To Pincode</span>
+                    <span>To Location</span>
                   </div>
                 </label>
-                <input
-                  type="text"
-                  id="toPincode"
-                  name="toPincode"
-                  value={searchParams.toPincode}
-                  onChange={handleInputChange}
-                  pattern="\d{6}"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="6-digit pincode"
+                <LocationAutocomplete
+                  placeholder="Enter destination location..."
+                  onLocationSelect={handleToLocationSelect}
                 />
               </div>
 
@@ -347,7 +338,7 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
           </div>
         )}
 
-        {!loading && vehicles.length === 0 && (searchParams.fromPincode || searchParams.capacityRequired) && (
+        {!loading && vehicles.length === 0 && (fromLocation || searchParams.capacityRequired) && (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -389,8 +380,8 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                   setModalError(null);
                 }}
                 vehicle={selectedVehicle}
-                fromPincode={searchParams.fromPincode}
-                toPincode={searchParams.toPincode}
+                fromLocation={fromLocation}
+                toLocation={toLocation}
                 startTimeIso={searchParams.startTime ? new Date(searchParams.startTime).toISOString() : new Date().toISOString()}
                 estimatedRideDurationHours={selectedVehicle?.estimatedRideDurationHours ?? 0}
                 onConfirm={confirmBooking}

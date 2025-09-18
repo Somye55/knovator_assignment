@@ -13,8 +13,8 @@ export default function AddVehicleForm({
 }: AddVehicleFormProps) {
   const [formData, setFormData] = useState<CreateVehicleData>({
     name: "",
-    capacity: 500,
-    tyres: 4,
+    capacity: 0,
+    tyres: 2,
   });
 
   const [loading, setLoading] = useState(false);
