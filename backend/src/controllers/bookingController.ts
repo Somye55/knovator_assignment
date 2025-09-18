@@ -149,3 +149,60 @@ export const getMyBookings = async (req: Request, res: Response): Promise<void> 
         res.status(500).json(response);
     }
 };
+
+// @desc    Cancel a booking
+// @route   PUT /api/bookings/:id/cancel
+// @access  Private
+export const cancelBooking = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        
+        // Find the booking
+        const booking = await Booking.findById(id);
+        if (!booking) {
+            const response: IApiResponse = {
+                success: false,
+                error: 'Booking not found'
+            };
+            res.status(404).json(response);
+            return;
+        }
+
+        // Check if booking can be cancelled (only pending or confirmed bookings)
+        if (booking.status === 'cancelled') {
+            const response: IApiResponse = {
+                success: false,
+                error: 'Booking is already cancelled'
+            };
+            res.status(400).json(response);
+            return;
+        }
+
+        if (booking.status === 'in_progress' || booking.status === 'completed') {
+            const response: IApiResponse = {
+                success: false,
+                error: 'Cannot cancel an in-progress or completed booking'
+            };
+            res.status(400).json(response);
+            return;
+        }
+
+        // Update booking status to cancelled
+        booking.status = 'cancelled';
+        const updatedBooking = await booking.save();
+
+        const response: IApiResponse = {
+            success: true,
+            data: updatedBooking,
+            message: 'Booking cancelled successfully'
+        };
+
+        res.status(200).json(response);
+    } catch (error) {
+        const response: IApiResponse = {
+            success: false,
+            error: (error as Error).message
+        };
+        res.status(500).json(response);
+    }
+};

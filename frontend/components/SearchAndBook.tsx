@@ -136,6 +136,14 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
         // Close modal on success
         setModalOpen(false);
         setSelectedVehicle(null);
+        
+        // Clear form after successful booking
+        setSearchParams({
+          capacityRequired: '',
+          fromPincode: '',
+          toPincode: '',
+          startTime: '',
+        });
       } else {
         const err = response.error || 'Failed to create booking';
         setModalError(err);
@@ -161,15 +169,23 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-6xl">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Search & Book Vehicles</h1>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Search & Book Vehicles</h1>
+          <p className="text-lg text-gray-600">Find the perfect vehicle for your transportation needs</p>
+        </div>
 
         {/* Search Form */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <form onSubmit={handleSearch} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
-                <label htmlFor="capacityRequired" className="block text-sm font-medium text-gray-700 mb-1">
-                  Capacity Required (KG)
+                <label htmlFor="capacityRequired" className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span>Capacity Required (KG)</span>
+                  </div>
                 </label>
                 <input
                   type="number"
@@ -179,14 +195,20 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                   onChange={handleInputChange}
                   min="20"
                   max="1500"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="e.g., 500"
                 />
               </div>
 
               <div>
-                <label htmlFor="fromPincode" className="block text-sm font-medium text-gray-700 mb-1">
-                  From Pincode
+                <label htmlFor="fromPincode" className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>From Pincode</span>
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -195,14 +217,20 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                   value={searchParams.fromPincode}
                   onChange={handleInputChange}
                   pattern="\d{6}"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="6-digit pincode"
                 />
               </div>
 
               <div>
-                <label htmlFor="toPincode" className="block text-sm font-medium text-gray-700 mb-1">
-                  To Pincode
+                <label htmlFor="toPincode" className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>To Pincode</span>
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -211,7 +239,7 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                   value={searchParams.toPincode}
                   onChange={handleInputChange}
                   pattern="\d{6}"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="6-digit pincode"
                 />
               </div>
@@ -220,17 +248,34 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-md hover:shadow-lg"
                 >
-                  {loading ? 'Searching...' : 'Search Vehicles'}
+                  {loading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Searching...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center space-x-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <span>Search Vehicles</span>
+                    </div>
+                  )}
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-6">
               <div>
-                <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Time (ISO Date format)
+                <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Start Time</span>
+                  </div>
                 </label>
                 <input
                   type="datetime-local"
@@ -239,7 +284,7 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
                   value={searchParams.startTime}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -248,41 +293,82 @@ export default function SearchAndBook({ onVehicleBooked }: SearchAndBookProps) {
 
         {/* Results */}
         {bookingSuccess && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-            Booking confirmed successfully!
+          <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-green-800">Booking Confirmed!</h3>
+                <p className="text-green-700">Your vehicle has been successfully booked.</p>
+              </div>
+            </div>
           </div>
         )}
 
         {bookingError && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {bookingError}
+          <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-red-800">Booking Failed</h3>
+                <p className="text-red-700">{bookingError}</p>
+              </div>
+            </div>
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+          <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-red-800">Search Error</h3>
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
         {loading && (
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Searching for available vehicles...</p>
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-lg text-gray-600">Searching for available vehicles...</p>
           </div>
         )}
 
         {!loading && vehicles.length === 0 && (searchParams.fromPincode || searchParams.capacityRequired) && (
-          <div className="text-center py-8">
-            <p className="text-gray-600">No vehicles found matching your criteria.</p>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No vehicles found</h3>
+            <p className="text-gray-600">Try adjusting your search criteria to find available vehicles.</p>
           </div>
         )}
 
         {!loading && vehicles.length > 0 && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''} found
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''} found
+              </h2>
+              <div className="text-sm text-gray-500">
+                Showing available vehicles for your requirements
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {vehicles.map(vehicle => (
                 <VehicleCard
