@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # MongoDB service
   mongodb:
-    image: mongo:7.0
+    image: mongo:latest
     container_name: fleetlink-mongodb
     restart: unless-stopped
     ports:
